@@ -101,9 +101,16 @@ public class IceClientLauncher extends JFrame {
         accountSwitcherPopup = new AccountSwitcherPopup(this, this::onAccountStateChanged);
         accountManager.addListener(this::onAccountStateChanged);
 
+        try {
+            setShape(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 24, 24));
+        } catch (Exception ignored) {}
+
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
+                try {
+                    setShape(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), 24, 24));
+                } catch (Exception ignored) {}
                 if (launchOverlay.isVisible()) {
                     launchOverlay.setBounds(0, 0, getLayeredPane().getWidth(), getLayeredPane().getHeight());
                 }

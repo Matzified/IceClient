@@ -65,15 +65,12 @@ public class ProfileManager {
                 Type listType = new TypeToken<ArrayList<Profile>>(){}.getType();
                 List<Profile> loaded = gson.fromJson(reader, listType);
                 if (loaded != null && !loaded.isEmpty()) {
-                    profiles.addAll(loaded);
+                    for (Profile p : loaded) {
+                        if (p.getName() != null && !p.getName().contains("Ultra") && !p.getName().contains("PvP (1.21)")) {
+                            profiles.add(p);
+                        }
+                    }
                     for (Profile p : profiles) {
-                        if ("1.21.11".equals(p.getMcVersion())) {
-                            p.setMcVersion("1.21.1");
-                        }
-                        if (p.getName() != null && p.getName().contains("Default")) {
-                            p.setName("Ice Optimized (1.21.1)");
-                            p.setDescription("Custom tuned high-performance Minecraft 1.21.1 with Sodium, Lithium, FerriteCore & Ice HUD");
-                        }
                         p.ensureDirectories();
                     }
                 }
