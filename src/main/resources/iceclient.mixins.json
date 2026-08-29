@@ -7,7 +7,9 @@
     "MinecraftClientMixin",
     "GameMenuScreenMixin",
     "TitleScreenMixin",
-    "KeyboardMixin"
+    "KeyboardMixin",
+    "InGameOverlayRendererMixin",
+    "HeldItemRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

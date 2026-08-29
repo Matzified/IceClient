@@ -83,6 +83,7 @@ public class ModuleManager {
         register(new TimeChangerModule());
         register(new CustomFogModule());
         register(new ChatCustomizerModule());
+        register(new OverlayModule());
     }
 
     public List<Module> getModules() {
