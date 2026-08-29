@@ -42,7 +42,14 @@ Copy-Item -Path ".\build\libs\IceClient-1.0.0.jar" -Destination "$env:APPDATA\.i
 
 ---
 
+## 🔄 GitHub & Pull Request Workflow
+- **Direct Autonomous Execution**: Proceed with edits, builds, tests, and git commits autonomously without waiting for manual confirmation on every intermediate step.
+- **Pull Request Protocol**: When delivering major feature batches, create a feature branch (`feat/...` or `patch/...`) and use `gh pr create` or `git push` to open Pull Requests to `Matzified/IceClient`.
+
+---
+
 ## 🛡️ Coding & Anti-Cheat Rules
 - **No UTF-8 BOM Headers**: Always write Java source files as plain UTF-8 without BOM to prevent Windows `javac` error `illegal character: '\ufeff'`.
 - **Fair-Play Only**: Never add packet manipulation, automation (auto-clicker, killaura), fly, speed, or xray. Keep all modules 100% client-side and Hypixel-compliant.
 - **Universal Mixin Targets**: Prefer injecting into lifecycle methods like `Screen.init()` rather than private version-specific methods.
+
