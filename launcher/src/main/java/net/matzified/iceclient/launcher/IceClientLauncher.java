@@ -43,6 +43,8 @@ public class IceClientLauncher extends JFrame {
     private int selectedNavIndex = 0;
     private final JButton[] dockTabs = new JButton[5];
     private ImageIcon logoIcon;
+    private ImageIcon scaledLogo32;
+    private ImageIcon scaledLogo72;
 
     public IceClientLauncher() {
         setUndecorated(true);
@@ -65,7 +67,6 @@ public class IceClientLauncher extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                // Multi-Stop Deep Cyan-Sapphire Void Gradient
                 GradientPaint bgGrad = new GradientPaint(0, 0, new Color(7, 10, 16), getWidth(), getHeight(), new Color(11, 16, 26));
                 g2.setPaint(bgGrad);
                 g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 24, 24));
@@ -75,13 +76,13 @@ public class IceClientLauncher extends JFrame {
                         new Point(getWidth() / 2, 40),
                         getWidth() / 2f,
                         new float[]{0.0f, 1.0f},
-                        new Color[]{new Color(56, 189, 248, 25), new Color(0, 0, 0, 0)}
+                        new Color[]{new Color(56, 189, 248, 30), new Color(0, 0, 0, 0)}
                 );
                 g2.setPaint(ambient);
                 g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 24, 24));
 
                 // Outer Glowing Border
-                g2.setColor(new Color(56, 189, 248, 80));
+                g2.setColor(new Color(56, 189, 248, 90));
                 g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 24, 24));
                 g2.dispose();
             }
@@ -144,6 +145,8 @@ public class IceClientLauncher extends JFrame {
                 Image img = ImageIO.read(is);
                 if (img != null) {
                     logoIcon = new ImageIcon(img);
+                    scaledLogo32 = new ImageIcon(img.getScaledInstance(32, 32, Image.SCALE_SMOOTH));
+                    scaledLogo72 = new ImageIcon(img.getScaledInstance(72, 72, Image.SCALE_SMOOTH));
                 }
             }
         } catch (Exception ignored) {}
@@ -152,8 +155,8 @@ public class IceClientLauncher extends JFrame {
     private JPanel createWindowTitleBar() {
         JPanel bar = new JPanel(new BorderLayout());
         bar.setOpaque(false);
-        bar.setPreferredSize(new Dimension(getWidth(), 56));
-        bar.setBorder(new EmptyBorder(6, 24, 0, 20));
+        bar.setPreferredSize(new Dimension(getWidth(), 58));
+        bar.setBorder(new EmptyBorder(6, 20, 0, 20));
 
         // Drag Listener
         bar.addMouseListener(new MouseAdapter() {
@@ -168,13 +171,17 @@ public class IceClientLauncher extends JFrame {
             }
         });
 
-        // Left Branding
-        JPanel leftBrand = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
+        // Left Branding with Real Logo Image & Frozen Square Text
+        JPanel leftBrand = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
         leftBrand.setOpaque(false);
 
-        JLabel logoText = new JLabel("🧊 ICE CLIENT");
-        logoText.setFont(new Font("Segoe UI", Font.BOLD, 17));
-        logoText.setForeground(new Color(56, 189, 248));
+        if (scaledLogo32 != null) {
+            JLabel logoImgLabel = new JLabel(scaledLogo32);
+            leftBrand.add(logoImgLabel);
+        }
+
+        FrozenLabel logoText = new FrozenLabel("ICE CLIENT", 17);
+        logoText.setPreferredSize(new Dimension(145, 36));
         leftBrand.add(logoText);
 
         JLabel tagPill = new JLabel(" ⚡ 1000 FPS COMPETITIVE ");
@@ -184,7 +191,7 @@ public class IceClientLauncher extends JFrame {
         tagPill.setBackground(new Color(18, 28, 46));
         tagPill.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(56, 189, 248, 80), 1),
-                new EmptyBorder(3, 8, 3, 8)
+                new EmptyBorder(4, 8, 4, 8)
         ));
         leftBrand.add(tagPill);
 
@@ -315,8 +322,8 @@ public class IceClientLauncher extends JFrame {
         page.setOpaque(false);
         page.setBorder(new EmptyBorder(16, 28, 12, 28));
 
-        // 1. Hero Showcase Banner
-        JPanel heroBanner = new JPanel(new BorderLayout()) {
+        // 1. Hero Showcase Banner with Real Logo & Frozen Square Overlay
+        JPanel heroBanner = new JPanel(new BorderLayout(20, 0)) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -331,18 +338,38 @@ public class IceClientLauncher extends JFrame {
         };
         heroBanner.setOpaque(false);
         heroBanner.setPreferredSize(new Dimension(getWidth(), 140));
-        heroBanner.setBorder(new EmptyBorder(24, 28, 24, 28));
+        heroBanner.setBorder(new EmptyBorder(20, 24, 20, 24));
+
+        // Left Logo Frame
+        if (scaledLogo72 != null) {
+            JPanel logoCard = new JPanel(new GridBagLayout()) {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(new Color(18, 26, 44));
+                    g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 14, 14));
+                    g2.setColor(new Color(56, 189, 248, 120));
+                    g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 14, 14));
+                    g2.dispose();
+                }
+            };
+            logoCard.setOpaque(false);
+            logoCard.setPreferredSize(new Dimension(96, 96));
+            logoCard.add(new JLabel(scaledLogo72));
+            heroBanner.add(logoCard, BorderLayout.WEST);
+        }
 
         JPanel heroText = new JPanel();
         heroText.setLayout(new BoxLayout(heroText, BoxLayout.Y_AXIS));
         heroText.setOpaque(false);
 
-        JLabel heroTitle = new JLabel("ICE CLIENT • 1000 FPS COMPETITIVE SUITE");
-        heroTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        heroTitle.setForeground(new Color(56, 189, 248));
+        FrozenLabel heroTitle = new FrozenLabel("ICE CLIENT • 1000 FPS COMPETITIVE SUITE", 19);
+        heroTitle.setPreferredSize(new Dimension(520, 42));
+        heroTitle.setMaximumSize(new Dimension(600, 42));
         heroText.add(heroTitle);
 
-        heroText.add(Box.createRigidArea(new Dimension(0, 6)));
+        heroText.add(Box.createRigidArea(new Dimension(0, 8)));
 
         JLabel heroSub = new JLabel("In-Engine FastMath lookup tables, VulkanMod architecture & 38+ custom HUD/PvP modules.");
         heroSub.setFont(new Font("Segoe UI", Font.PLAIN, 13));
