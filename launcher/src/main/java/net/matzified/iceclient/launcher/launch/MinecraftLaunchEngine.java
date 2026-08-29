@@ -501,16 +501,9 @@ public class MinecraftLaunchEngine {
         File modsDir = profile.getModsDir();
         modsDir.mkdirs();
 
-        // 1. Deploy local Ice Client Core Mod if available in workspace
-        try {
-            File localMod = new File("../build/libs/IceClient-1.0.0.jar");
-            if (!localMod.exists()) localMod = new File("build/libs/IceClient-1.0.0.jar");
-            if (localMod.exists()) {
-                File target = new File(modsDir, "IceClient-1.0.0.jar");
-                Files.copy(localMod.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                status("Deployed Ice Client core mod.");
-            }
-        } catch (Exception ignored) {}
+        // 1. Ensure Ice Client Core Mod is deployed to this profile
+        ProfileManager.getInstance().ensureIceClientModInProfile(profile);
+        status("Deployed Ice Client core mod.");
 
         // 2. Pre-configure optimized options.txt for 1000 FPS competitive gaming
         File optionsFile = new File(profile.getGameDir(), "options.txt");

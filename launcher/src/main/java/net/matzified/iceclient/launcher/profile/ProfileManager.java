@@ -9,29 +9,37 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ProfileManager {
 
+    public static final String[] SUPPORTED_VERSIONS = {
+            "1.21.1", "1.21", "1.20.4", "1.20.1", "1.19.4", "1.18.2", "1.16.5", "1.8.9"
+    };
+
+    public static final String DEFAULT_JVM_ARGS =
+            "-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=200 " +
+            "-XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch " +
+            "-XX:G1NewSizePercent=30 -XX:G1MaxNewSizePercent=40 -XX:G1ReservePercent=20 " +
+            "-XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 " +
+            "-XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 " +
+            "-XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 " +
+            "-Dsun.rmi.dgc.server.gcInterval=2147483646 -Dsun.rmi.dgc.client.gcInterval=2147483646";
+
     private static ProfileManager instance;
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private final File rootDir;
     private final File profilesFile;
-    private final List<Profile> profiles = new ArrayList<>();
+
+    private List<Profile> profiles = new ArrayList<>();
     private Profile activeProfile;
-
-    public static final String[] SUPPORTED_VERSIONS = {
-            "1.21.11", "1.21.10", "1.21.9", "1.21.8", "1.21.7", "1.21.6", "1.21.5", "1.21.4", "1.21.3", "1.21.2", "1.21.1", "1.21",
-            "1.20.6", "1.20.4", "1.20.1", "1.19.4", "1.18.2", "1.16.5"
-    };
-
-    public static final String DEFAULT_JVM_ARGS =
-            "-XX:+UseG1GC -XX:+ParallelRefProcEnabled -XX:MaxGCPauseMillis=30 -XX:+UnlockExperimentalVMOptions -XX:+DisableExplicitGC -XX:+AlwaysPreTouch -XX:G1NewSizePercent=35 -XX:G1MaxNewSizePercent=45 -XX:G1ReservePercent=15 -XX:G1HeapWastePercent=5 -XX:G1MixedGCCountTarget=4 -XX:InitiatingHeapOccupancyPercent=15 -XX:G1MixedGCLiveThresholdPercent=90 -XX:G1RSetUpdatingPauseTimePercent=5 -XX:SurvivorRatio=32 -XX:+PerfDisableSharedMem -XX:MaxTenuringThreshold=1 -Diceclient.ultrafps=true";
 
     private ProfileManager() {
         String appData = System.getenv("APPDATA");
-        if (appData != null) {
+        if (appData != null && !appData.isEmpty()) {
             rootDir = new File(appData, ".iceclient");
         } else {
             rootDir = new File(System.getProperty("user.home"), ".iceclient");
@@ -72,6 +80,7 @@ public class ProfileManager {
                     }
                     for (Profile p : profiles) {
                         p.ensureDirectories();
+                        ensureIceClientModInProfile(p);
                     }
                 }
             } catch (Exception e) {
@@ -85,6 +94,29 @@ public class ProfileManager {
 
         if (activeProfile == null && !profiles.isEmpty()) {
             activeProfile = profiles.get(0);
+        }
+    }
+
+    public void ensureIceClientModInProfile(Profile profile) {
+        if (profile == null) return;
+        File modsDir = profile.getModsDir();
+        if (!modsDir.exists()) modsDir.mkdirs();
+
+        File target = new File(modsDir, "IceClient-1.0.0.jar");
+        File[] candidateSources = {
+                new File(rootDir, "mods/IceClient-1.0.0.jar"),
+                new File("build/libs/IceClient-1.0.0.jar"),
+                new File("../build/libs/IceClient-1.0.0.jar"),
+                new File(new File(rootDir, "profiles/1.21.1-Default/mods"), "IceClient-1.0.0.jar")
+        };
+
+        for (File src : candidateSources) {
+            if (src.exists() && src.length() > 5000) {
+                try {
+                    Files.copy(src.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    break;
+                } catch (Exception ignored) {}
+            }
         }
     }
 
@@ -104,6 +136,7 @@ public class ProfileManager {
                 "#0284C7"
         );
 
+        ensureIceClientModInProfile(p1);
         profiles.add(p1);
         activeProfile = p1;
         saveProfiles();
@@ -132,6 +165,7 @@ public class ProfileManager {
     public void setActiveProfile(Profile profile) {
         this.activeProfile = profile;
         if (profile != null) {
+            ensureIceClientModInProfile(profile);
             profile.setLastUsed(System.currentTimeMillis());
             saveProfiles();
         }
@@ -139,6 +173,7 @@ public class ProfileManager {
 
     public void addProfile(Profile profile) {
         profile.ensureDirectories();
+        ensureIceClientModInProfile(profile);
         profiles.add(profile);
         setActiveProfile(profile);
     }
