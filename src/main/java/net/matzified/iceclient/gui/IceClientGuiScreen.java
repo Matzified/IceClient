@@ -5,11 +5,12 @@ import net.matzified.iceclient.module.Module;
 import net.matzified.iceclient.module.ModuleManager;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.text.Text;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class IceClientGuiScreen extends Screen {
@@ -20,6 +21,12 @@ public class IceClientGuiScreen extends Screen {
     private int scrollOffset = 0;
     private int maxScroll = 0;
 
+    // Smooth GUI Open Animation
+    private final long openTime = System.currentTimeMillis();
+
+    // Smooth Toggle Switch Animations per module (interpolated 0.0f to 1.0f)
+    private final Map<String, Float> switchAnimMap = new HashMap<>();
+
     public IceClientGuiScreen() {
         super(Text.literal("Ice Client Menu"));
     }
@@ -29,23 +36,35 @@ public class IceClientGuiScreen extends Screen {
         return false;
     }
 
+    private float getEaseProgress() {
+        long elapsed = System.currentTimeMillis() - openTime;
+        float t = Math.min(1.0f, elapsed / 220.0f);
+        return 1.0f - (float) Math.pow(1.0f - t, 3); // easeOutCubic
+    }
+
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Dark translucent frosted background
-        context.fill(0, 0, width, height, 0xD00A0D14);
+        float ease = getEaseProgress();
+
+        // Dark frosted translucent background with fade-in
+        int bgAlpha = (int) (0xD0 * ease);
+        context.fill(0, 0, width, height, (bgAlpha << 24) | 0x0A0D14);
 
         int panelW = Math.min(840, width - 40);
         int panelH = Math.min(540, height - 40);
+
+        // Smooth scale-up and slide-in effect
+        int animatedH = (int) (panelH * (0.92f + 0.08f * ease));
         int panelX = (width - panelW) / 2;
-        int panelY = (height - panelH) / 2;
+        int panelY = (height - animatedH) / 2;
 
         // Main Glass Panel Container
-        context.fill(panelX, panelY, panelX + panelW, panelY + panelH, 0xEE111622);
-        // Outer Cyan Glow Border
+        context.fill(panelX, panelY, panelX + panelW, panelY + animatedH, 0xEE111622);
+        // Outer Cyan Glow Border with smooth dynamic brightness
         context.fill(panelX, panelY, panelX + panelW, panelY + 2, 0xFF38BDF8);
-        context.fill(panelX, panelY + panelH - 2, panelX + panelW, panelY + panelH, 0x3338BDF8);
-        context.fill(panelX, panelY, panelX + 2, panelY + panelH, 0x3338BDF8);
-        context.fill(panelX + panelW - 2, panelY, panelX + panelW, panelY + panelH, 0x3338BDF8);
+        context.fill(panelX, panelY + animatedH - 2, panelX + panelW, panelY + animatedH, 0x3338BDF8);
+        context.fill(panelX, panelY, panelX + 2, panelY + animatedH, 0x3338BDF8);
+        context.fill(panelX + panelW - 2, panelY, panelX + panelW, panelY + animatedH, 0x3338BDF8);
 
         // Header
         renderHeader(context, panelX, panelY, panelW, mouseX, mouseY);
@@ -54,7 +73,7 @@ public class IceClientGuiScreen extends Screen {
         renderCategoryTabs(context, panelX, panelY + 48, panelW, mouseX, mouseY);
 
         // Modules Grid
-        renderModulesGrid(context, panelX + 20, panelY + 95, panelW - 40, panelH - 110, mouseX, mouseY);
+        renderModulesGrid(context, panelX + 20, panelY + 95, panelW - 40, animatedH - 110, mouseX, mouseY);
 
         super.render(context, mouseX, mouseY, delta);
     }
@@ -153,7 +172,7 @@ public class IceClientGuiScreen extends Screen {
 
             boolean isHover = mouseX >= cx && mouseX <= cx + cardW && mouseY >= cy && mouseY <= cy + cardH;
 
-            // Card Background
+            // Card Background with smooth hover lighting
             int bgCol = isHover ? 0xFF1E2638 : 0xFF141926;
             context.fill(cx, cy, cx + cardW, cy + cardH, bgCol);
 
@@ -175,14 +194,14 @@ public class IceClientGuiScreen extends Screen {
             // Category Pill
             String catName = m.getCategory().displayName;
             int catW = textRenderer.getWidth(catName) + 8;
-            int catX = cx + cardW - catW - 74;
+            int catX = cx + cardW - catW - 90;
             context.fill(catX, cy + 10, catX + catW, cy + 22, 0xFF1E293B);
             context.drawTextWithShadow(textRenderer, catName, catX + 4, cy + 12, 0xFF94A3B8);
 
             // Description
             String desc = m.getDescription();
-            if (textRenderer.getWidth(desc) > cardW - 84) {
-                desc = textRenderer.trimToWidth(desc, cardW - 96) + "...";
+            if (textRenderer.getWidth(desc) > cardW - 100) {
+                desc = textRenderer.trimToWidth(desc, cardW - 110) + "...";
             }
             context.drawTextWithShadow(textRenderer, desc, cx + 12, cy + 30, 0xFF94A3B8);
 
@@ -195,19 +214,31 @@ public class IceClientGuiScreen extends Screen {
             context.fill(gearX, gearY, gearX + gearW, gearY + gearH, gearHover ? 0xFF0284C7 : 0xFF1E293B);
             context.drawTextWithShadow(textRenderer, "⚙️", gearX + 6, gearY + 7, 0xFFFFFFFF);
 
-            // Toggle Switch Button
+            // Animated Toggle Switch Button (Interpolated 0.0 -> 1.0)
             int switchW = 46;
             int switchH = 22;
             int switchX = cx + cardW - switchW - 10;
             int switchY = cy + (cardH - switchH) / 2;
 
-            if (m.isEnabled()) {
-                context.fill(switchX, switchY, switchX + switchW, switchY + switchH, 0xFF0284C7);
-                context.fill(switchX + switchW - 18, switchY + 2, switchX + switchW - 2, switchY + switchH - 2, 0xFFFFFFFF);
+            float targetVal = m.isEnabled() ? 1.0f : 0.0f;
+            float currentVal = switchAnimMap.getOrDefault(m.getId(), targetVal);
+            currentVal += (targetVal - currentVal) * 0.25f; // Smooth glide easing
+            switchAnimMap.put(m.getId(), currentVal);
+
+            int trackCol = m.isEnabled() ? 0xFF0284C7 : 0xFF334155;
+            context.fill(switchX, switchY, switchX + switchW, switchY + switchH, trackCol);
+
+            // Sliding Knob
+            int knobW = 16;
+            int knobX = switchX + 2 + (int) (currentVal * (switchW - knobW - 4));
+            context.fill(knobX, switchY + 2, knobX + knobW, switchY + switchH - 2, 0xFFFFFFFF);
+
+            String statusText = m.isEnabled() ? "ON" : "OFF";
+            int textOffset = m.isEnabled() ? (switchX + 5) : (switchX + 24);
+            // Draw label
+            if (currentVal > 0.6f) {
                 context.drawTextWithShadow(textRenderer, "ON", switchX + 5, switchY + 7, 0xFFFFFFFF);
-            } else {
-                context.fill(switchX, switchY, switchX + switchW, switchY + switchH, 0xFF334155);
-                context.fill(switchX + 2, switchY + 2, switchX + 18, switchY + switchH - 2, 0xFF94A3B8);
+            } else if (currentVal < 0.4f) {
                 context.drawTextWithShadow(textRenderer, "OFF", switchX + 22, switchY + 7, 0xFF94A3B8);
             }
         }
@@ -320,7 +351,7 @@ public class IceClientGuiScreen extends Screen {
             return true;
         }
 
-        // Simple search query input handling
+        // Search input handling
         if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
             if (!searchQuery.isEmpty()) {
                 searchQuery = searchQuery.substring(0, searchQuery.length() - 1);

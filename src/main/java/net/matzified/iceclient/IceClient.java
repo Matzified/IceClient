@@ -24,7 +24,10 @@ public class IceClient implements ClientModInitializer {
     public void onInitializeClient() {
         LOGGER.info("Initializing Ice Client Modular Suite v1.0.0 for Fabric 1.21.1!");
 
-        // 1. Register Right Shift Keybind for Mod Menu
+        // 1. Initialize In-Engine Base Game Optimization Core
+        net.matzified.iceclient.optimizer.IceOptimizerEngine.getInstance().init();
+
+        // 2. Register Right Shift Keybind for Mod Menu
         rightShiftKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.iceclient.menu",
                 InputUtil.Type.KEYSYM,
@@ -32,7 +35,7 @@ public class IceClient implements ClientModInitializer {
                 "category.iceclient"
         ));
 
-        // 2. Client Tick Event (Handle Right Shift & Module Ticks)
+        // 3. Client Tick Event (Handle Right Shift, Optimizer & Module Ticks)
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (rightShiftKey.wasPressed()) {
                 if (client.currentScreen == null) {
@@ -40,6 +43,7 @@ public class IceClient implements ClientModInitializer {
                 }
             }
             ModuleManager.getInstance().onTick();
+            net.matzified.iceclient.optimizer.IceOptimizerEngine.getInstance().onTick();
         });
 
         // 3. Register Modular HUD Render Callback

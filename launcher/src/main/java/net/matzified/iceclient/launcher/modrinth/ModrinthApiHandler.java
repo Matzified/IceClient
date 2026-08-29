@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.matzified.iceclient.launcher.model.Profile;
 import net.matzified.iceclient.launcher.profile.ProfileManager;
-import net.matzified.iceclient.launcher.utils.ModpackImporter;
 
 import java.io.File;
 import java.io.InputStream;
@@ -19,15 +18,15 @@ import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class ModrinthApiHandler {
 
     public enum ProjectType {
         MODS("mod", "Mods"),
-        MODPACKS("modpack", "Modpacks"),
         RESOURCEPACKS("resourcepack", "Resource Packs"),
-        SHADERS("shader", "Shaders"),
-        DATAPACKS("datapack", "Data Packs");
+        DATAPACKS("datapack", "Data Packs"),
+        SHADERS("shader", "Shaders");
 
         public final String apiType;
         public final String displayName;
@@ -51,6 +50,7 @@ public class ModrinthApiHandler {
         public String iconUrl;
         public String author;
         public ProjectType projectType;
+        public boolean isInstalled = false;
 
         public ModResult(String title, String description, String projectId, String downloads, String iconUrl, String author, ProjectType projectType) {
             this.title = title;
@@ -68,16 +68,18 @@ public class ModrinthApiHandler {
         try {
             String encodedQuery = URLEncoder.encode(query, StandardCharsets.UTF_8);
 
-            // Facets array: categories:fabric AND project_type:type AND versions:mcVersion
-            String facetsStr = "[[\"project_type:" + projectType.apiType + "\"],[\"categories:fabric\"],[\"versions:" + mcVersion + "\"]]";
+            // Filter for Fabric and active version if provided
+            String facetsStr = "[[\"project_type:" + projectType.apiType + "\"],[\"categories:fabric\"]]";
             String facetsParam = URLEncoder.encode(facetsStr, StandardCharsets.UTF_8);
 
-            String urlStr = "https://api.modrinth.com/v2/search?query=" + encodedQuery + "&facets=" + facetsParam + "&limit=20";
+            String urlStr = "https://api.modrinth.com/v2/search?query=" + encodedQuery + "&facets=" + facetsParam + "&limit=24";
 
             URL url = new URL(urlStr);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setRequestProperty("User-Agent", "IceClientLauncher/1.0.0");
+            conn.setConnectTimeout(8000);
+            conn.setReadTimeout(8000);
 
             if (conn.getResponseCode() == 200) {
                 JsonObject json = JsonParser.parseReader(new InputStreamReader(conn.getInputStream())).getAsJsonObject();
@@ -101,76 +103,94 @@ public class ModrinthApiHandler {
         return results;
     }
 
-    public static boolean installModrinthAsset(ModResult item, String mcVersion, Runnable onCompleteCallback) {
-        try {
-            Profile activeProfile = ProfileManager.getInstance().getActiveProfile();
-            if (activeProfile == null) return false;
+    /**
+     * Finds the best recommended version of the mod matching the active profile's Minecraft version
+     * and downloads the JAR into the profile's mods folder.
+     */
+    public static void installModAsync(ModResult item, String mcVersion, Consumer<Boolean> callback) {
+        new Thread(() -> {
+            try {
+                Profile activeProfile = ProfileManager.getInstance().getActiveProfile();
+                if (activeProfile == null) {
+                    callback.accept(false);
+                    return;
+                }
 
-            String versionsParam = URLEncoder.encode("[\"" + mcVersion + "\"]", StandardCharsets.UTF_8);
-            String loadersParam = URLEncoder.encode("[\"fabric\"]", StandardCharsets.UTF_8);
-            String versionsUrl = "https://api.modrinth.com/v2/project/" + item.projectId + "/version?game_versions=" + versionsParam + "&loaders=" + loadersParam;
+                File gameDir = new File(activeProfile.getGameDir());
+                File targetDir;
+                switch (item.projectType) {
+                    case RESOURCEPACKS:
+                        targetDir = new File(gameDir, "resourcepacks");
+                        break;
+                    case SHADERS:
+                        targetDir = new File(gameDir, "shaderpacks");
+                        break;
+                    case DATAPACKS:
+                        targetDir = new File(gameDir, "datapacks");
+                        break;
+                    default:
+                        targetDir = new File(gameDir, "mods");
+                        break;
+                }
+                if (!targetDir.exists()) targetDir.mkdirs();
 
-            URL url = new URL(versionsUrl);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty("User-Agent", "IceClientLauncher/1.0.0");
+                // 1. Try querying specific version
+                String versionsUrl = "https://api.modrinth.com/v2/project/" + item.projectId + "/version";
+                URL url = new URL(versionsUrl);
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setRequestProperty("User-Agent", "IceClientLauncher/1.0.0");
+                conn.setConnectTimeout(8000);
+                conn.setReadTimeout(8000);
 
-            if (conn.getResponseCode() == 200) {
-                JsonArray versions = JsonParser.parseReader(new InputStreamReader(conn.getInputStream())).getAsJsonArray();
-                if (versions.size() > 0) {
-                    JsonObject latestVersion = versions.get(0).getAsJsonObject();
-                    JsonArray files = latestVersion.getAsJsonArray("files");
+                if (conn.getResponseCode() == 200) {
+                    JsonArray versions = JsonParser.parseReader(new InputStreamReader(conn.getInputStream())).getAsJsonArray();
+                    JsonObject bestVersion = null;
 
-                    if (files.size() > 0) {
-                        JsonObject fileObj = files.get(0).getAsJsonObject();
-                        String downloadUrl = fileObj.get("url").getAsString();
-                        String filename = fileObj.get("filename").getAsString();
-
-                        File targetDir;
-                        switch (item.projectType) {
-                            case RESOURCEPACKS:
-                                targetDir = new File(activeProfile.getResourcePacksDir());
+                    // Find version matching exact mcVersion or 1.21 branch
+                    for (JsonElement vEl : versions) {
+                        JsonObject vObj = vEl.getAsJsonObject();
+                        JsonArray gameVersions = vObj.getAsJsonArray("game_versions");
+                        for (JsonElement gv : gameVersions) {
+                            String gvStr = gv.getAsString();
+                            if (gvStr.equals(mcVersion) || (mcVersion.startsWith("1.21") && gvStr.startsWith("1.21"))) {
+                                bestVersion = vObj;
                                 break;
-                            case SHADERS:
-                                targetDir = new File(activeProfile.getShaderPacksDir());
-                                break;
-                            case DATAPACKS:
-                                targetDir = new File(activeProfile.getDataPacksDir());
-                                break;
-                            case MODPACKS:
-                                File tempFile = new File(ProfileManager.getInstance().getRootDir(), filename);
-                                downloadFileFromUrl(downloadUrl, tempFile);
-                                Profile importedPack = ModpackImporter.importModpackFile(tempFile, item.title);
-                                if (importedPack != null) {
-                                    ProfileManager.getInstance().addProfile(importedPack);
-                                }
-                                tempFile.delete();
-                                return true;
-                            case MODS:
-                            default:
-                                targetDir = new File(activeProfile.getModDir());
-                                break;
+                            }
                         }
+                        if (bestVersion != null) break;
+                    }
 
-                        targetDir.mkdirs();
-                        File destination = new File(targetDir, filename);
-                        downloadFileFromUrl(downloadUrl, destination);
-                        return true;
+                    // Fallback to most recent version if no exact version string match
+                    if (bestVersion == null && versions.size() > 0) {
+                        bestVersion = versions.get(0).getAsJsonObject();
+                    }
+
+                    if (bestVersion != null) {
+                        JsonArray files = bestVersion.getAsJsonArray("files");
+                        if (files.size() > 0) {
+                            JsonObject fileObj = files.get(0).getAsJsonObject();
+                            String downloadUrl = fileObj.get("url").getAsString();
+                            String filename = fileObj.get("filename").getAsString();
+
+                            File destFile = new File(targetDir, filename);
+
+                            // Download file
+                            URL downloadHttp = new URL(downloadUrl);
+                            try (InputStream in = downloadHttp.openStream()) {
+                                Files.copy(in, destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            }
+
+                            item.isInstalled = true;
+                            callback.accept(true);
+                            return;
+                        }
                     }
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    private static void downloadFileFromUrl(String urlStr, File targetFile) throws Exception {
-        URL url = new URL(urlStr);
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setRequestProperty("User-Agent", "IceClientLauncher/1.0.0");
-        try (InputStream in = conn.getInputStream()) {
-            Files.copy(in, targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        }
+            callback.accept(false);
+        }).start();
     }
 }

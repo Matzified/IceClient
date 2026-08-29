@@ -617,6 +617,15 @@ public class MinecraftLaunchEngine {
         cmd.add("-Diceclient.brand=IceOptimized");
         cmd.add("-Diceclient.version=1.0.0");
 
+        // VulkanMod low-overhead graphics compatibility
+        File modsFolder = profile.getModsDir();
+        boolean hasVulkan = modsFolder.exists() && modsFolder.listFiles((d, name) -> name.toLowerCase().contains("vulkan")) != null && modsFolder.listFiles((d, name) -> name.toLowerCase().contains("vulkan")).length > 0;
+        if (hasVulkan) {
+            cmd.add("-Dorg.lwjgl.util.NoChecks=true");
+            cmd.add("-Dorg.lwjgl.opengl.disableChecks=true");
+            cmd.add("-Diceclient.vulkan=true");
+        }
+
         // Classpath
         cmd.add("-cp");
         cmd.add(cp.toString());

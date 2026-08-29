@@ -95,48 +95,19 @@ public class ProfileManager {
         File profilesDir = new File(rootDir, "profiles");
 
         Profile p1 = new Profile(
-                "ice_optimized_1211",
-                "Ice Optimized (1.21.1)",
-                "Custom tuned high-performance Minecraft 1.21.1 with Sodium, Lithium, FerriteCore & Ice HUD",
+                "vanilla_1211",
+                "Vanilla (1.21.1)",
+                "Standard Minecraft 1.21.1 with Ice Client HUD and in-engine optimizations",
                 "1.21.1",
                 "0.16.0",
                 4,
                 DEFAULT_JVM_ARGS,
-                new File(profilesDir, "Ice-Optimized-1.21.1").getAbsolutePath(),
+                new File(profilesDir, "1.21.1-Default").getAbsolutePath(),
                 "🧊",
                 "#0284C7"
         );
 
-        Profile p2 = new Profile(
-                "ice_pvp_121",
-                "Ice PvP (1.21)",
-                "Vanilla Fabric 1.21 tuned for low latency competitive PvP",
-                "1.21",
-                "0.16.0",
-                4,
-                DEFAULT_JVM_ARGS,
-                new File(profilesDir, "Ice-PvP-1.21").getAbsolutePath(),
-                "⚡",
-                "#38BDF8"
-        );
-
-        Profile p3 = new Profile(
-                "ice_highperf_1214",
-                "Ice Ultra (1.21.4)",
-                "Minecraft 1.21.4 high performance profile with extra RAM allocation",
-                "1.21.4",
-                "0.16.0",
-                6,
-                DEFAULT_JVM_ARGS,
-                new File(profilesDir, "Ice-Ultra-1.21.4").getAbsolutePath(),
-                "🚀",
-                "#10B981"
-        );
-
         profiles.add(p1);
-        profiles.add(p2);
-        profiles.add(p3);
-
         activeProfile = p1;
         saveProfiles();
     }
