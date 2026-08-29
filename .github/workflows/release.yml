@@ -1,0 +1,38 @@
+name: 🚀 Build & Publish Release Artifacts
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    name: 📦 Package & Publish Jars
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: 🔨 Package Release Jars
+        run: |
+          chmod +x gradlew || true
+          ./gradlew :compileJava :classes :jar :remapJar :launcher:compileJava :launcher:classes :launcher:jar --no-daemon
+
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/libs/IceClient-*.jar
+            launcher/build/libs/IceClientLauncher.jar
+          draft: false
+          prerelease: false
+          generate_release_notes: true

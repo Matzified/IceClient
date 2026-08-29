@@ -1,0 +1,30 @@
+name: 🤖 Agent Feature / Bug Task
+description: Create a technical task specification for autonomous agents to implement
+title: "[TASK] "
+labels: ["agent-task", "ready-for-agent"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🧊 Ice Client - Agent Task Specification
+  - type: dropdown
+    id: component
+    attributes:
+      label: Target Component
+      options:
+        - In-Game Mod Core (net.matzified.iceclient)
+        - Standalone Launcher (net.matzified.iceclient.launcher)
+        - HUD / GUI Engine
+        - 1.21+ Modern PvP Suite
+        - Visuals & Shaders
+      default: 0
+    validations:
+      required: true
+  - type: textarea
+    id: spec
+    attributes:
+      label: Technical Specification & Acceptance Criteria
+      description: Describe what the module or feature should do.
+      placeholder: "- Module name: ...\n- Category: ...\n- Required settings: ...\n- Definition of Done: ..."
+    validations:
+      required: true

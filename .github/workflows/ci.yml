@@ -1,0 +1,45 @@
+name: 🧊 Ice Client CI & Build Matrix
+
+on:
+  push:
+    branches: [ main, 'feat/*', 'patch/*' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: 🔨 Compile Mod & Standalone Launcher
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+
+      - name: 🛡️ Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v3
+
+      - name: 🚀 Build Mod & Launcher with Gradle
+        run: |
+          chmod +x gradlew || true
+          ./gradlew :compileJava :classes :jar :remapJar :launcher:compileJava :launcher:classes :launcher:jar --no-daemon
+
+      - name: 📦 Archive Mod Jar Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: IceClient-Mod-Jar
+          path: build/libs/*.jar
+          retention-days: 7
+
+      - name: 📦 Archive Launcher Jar Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: IceClient-Launcher-Jar
+          path: launcher/build/libs/*.jar
+          retention-days: 7

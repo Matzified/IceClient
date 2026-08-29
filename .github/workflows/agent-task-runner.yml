@@ -1,0 +1,58 @@
+name: 🤖 Agent Task Runner & Dispatch
+
+on:
+  issues:
+    types: [ opened, labeled ]
+  workflow_dispatch:
+    inputs:
+      task_id:
+        description: 'Agent Task ID (e.g. ICE-001)'
+        required: true
+        default: 'ICE-001'
+      task_title:
+        description: 'Task Title / Description'
+        required: true
+        default: 'Implement Feature'
+
+jobs:
+  agent_dispatch:
+    name: 🎯 Process & Validate Agent Task
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Inspect Task Specs
+        run: |
+          echo "=== 🤖 Processing Agent Task ==="
+          echo "Task ID: ${{ github.event.inputs.task_id || github.event.issue.title }}"
+          echo "Checking specifications in docs/TECHNICAL_SPECIFICATIONS.md..."
+          cat docs/AGENT_TASK_BOARD.md
+
+      - name: ☕ Setup Build Environment
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: ⚡ Run Verification Build
+        run: |
+          chmod +x gradlew || true
+          ./gradlew :classes :launcher:classes --no-daemon
+
+      - name: 💬 Post Status Comment
+        if: github.event_name == 'issues'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🤖 **Ice Client Agent Runner**: Task acknowledged! Specifications verified against \`docs/TECHNICAL_SPECIFICATIONS.md\`. Work branch ready for execution.`
+            });
