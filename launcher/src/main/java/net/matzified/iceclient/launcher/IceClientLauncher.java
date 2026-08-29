@@ -44,8 +44,8 @@ public class IceClientLauncher extends JFrame {
     private int selectedNavIndex = 0;
     private final JButton[] dockTabs = new JButton[5];
     private ImageIcon logoIcon;
-    private ImageIcon scaledLogo28;
-    private ImageIcon scaledLogo80;
+    private ImageIcon scaledLogo32;
+    private ImageIcon chromeGemIcon;
 
     public IceClientLauncher() {
         setUndecorated(true);
@@ -55,20 +55,20 @@ public class IceClientLauncher extends JFrame {
         setMinimumSize(new Dimension(1000, 650));
         setLocationRelativeTo(null);
 
-        loadLogo();
+        loadAssets();
         if (logoIcon != null) {
             setIconImage(logoIcon.getImage());
         }
 
         AutoUpdater.checkForUpdatesAsync(this);
 
-        // Lunar-inspired clean obsidian theme
+        // Clean Obsidian Background
         JPanel rootPanel = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(14, 17, 23));
+                g2.setColor(new Color(13, 17, 23));
                 g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 16, 16));
                 g2.setColor(new Color(48, 54, 61));
                 g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 16, 16));
@@ -135,14 +135,22 @@ public class IceClientLauncher extends JFrame {
         });
     }
 
-    private void loadLogo() {
+    private void loadAssets() {
         try (InputStream is = getClass().getResourceAsStream("/assets/logo.png")) {
             if (is != null) {
                 Image img = ImageIO.read(is);
                 if (img != null) {
                     logoIcon = new ImageIcon(img);
-                    scaledLogo28 = new ImageIcon(img.getScaledInstance(28, 28, Image.SCALE_SMOOTH));
-                    scaledLogo80 = new ImageIcon(img.getScaledInstance(80, 80, Image.SCALE_SMOOTH));
+                    scaledLogo32 = new ImageIcon(img.getScaledInstance(32, 32, Image.SCALE_SMOOTH));
+                }
+            }
+        } catch (Exception ignored) {}
+
+        try (InputStream is = getClass().getResourceAsStream("/assets/ChromeGem.png")) {
+            if (is != null) {
+                Image img = ImageIO.read(is);
+                if (img != null) {
+                    chromeGemIcon = new ImageIcon(img.getScaledInstance(140, 140, Image.SCALE_SMOOTH));
                 }
             }
         } catch (Exception ignored) {}
@@ -168,12 +176,11 @@ public class IceClientLauncher extends JFrame {
         });
 
         // Left Branding
-        JPanel leftBrand = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 12));
+        JPanel leftBrand = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         leftBrand.setOpaque(false);
 
-        if (scaledLogo28 != null) {
-            JLabel logoImg = new JLabel(scaledLogo28);
-            leftBrand.add(logoImg);
+        if (scaledLogo32 != null) {
+            leftBrand.add(new JLabel(scaledLogo32));
         }
 
         JLabel logoText = new JLabel("ICE CLIENT");
@@ -184,7 +191,7 @@ public class IceClientLauncher extends JFrame {
         bar.add(leftBrand, BorderLayout.WEST);
 
         // Center Navigation Tabs
-        JPanel navCenter = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 10));
+        JPanel navCenter = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 10));
         navCenter.setOpaque(false);
 
         String[] tabNames = {"HOME", "PROFILES", "MOD STORE", "MODS", "ACCOUNTS"};
@@ -200,7 +207,7 @@ public class IceClientLauncher extends JFrame {
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     boolean isSel = (selectedNavIndex == idx);
                     if (isSel) {
-                        g2.setColor(new Color(56, 189, 248, 25));
+                        g2.setColor(new Color(56, 189, 248, 30));
                         g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 8, 8));
                         g2.setColor(new Color(56, 189, 248));
                         g2.fillRect(6, getHeight() - 2, getWidth() - 12, 2);
@@ -217,7 +224,7 @@ public class IceClientLauncher extends JFrame {
             tab.setFocusPainted(false);
             tab.setBorderPainted(false);
             tab.setContentAreaFilled(false);
-            tab.setPreferredSize(new Dimension(100, 32));
+            tab.setPreferredSize(new Dimension(95, 32));
             tab.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             tab.addActionListener(e -> {
@@ -293,101 +300,88 @@ public class IceClientLauncher extends JFrame {
     }
 
     private JPanel createLunarHomePage() {
-        JPanel page = new JPanel(new GridBagLayout());
+        JPanel page = new JPanel(new BorderLayout(0, 18));
         page.setOpaque(false);
-        page.setBorder(new EmptyBorder(24, 32, 24, 32));
+        page.setBorder(new EmptyBorder(22, 28, 18, 28));
 
-        JPanel showcaseCard = new JPanel(new BorderLayout(24, 18)) {
+        // 1. Full-Bleed Hero Showcase Banner (Lunar Style)
+        JPanel heroBanner = new JPanel(new BorderLayout(24, 0)) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(22, 27, 34));
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 16, 16));
+                // Subtle linear gradient from dark slate to deep navy
+                GradientPaint gp = new GradientPaint(0, 0, new Color(22, 27, 34), getWidth(), 0, new Color(17, 24, 39));
+                g2.setPaint(gp);
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 12, 12));
                 g2.setColor(new Color(48, 54, 61));
-                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 16, 16));
+                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 12, 12));
                 g2.dispose();
             }
         };
-        showcaseCard.setOpaque(false);
-        showcaseCard.setPreferredSize(new Dimension(840, 360));
-        showcaseCard.setBorder(new EmptyBorder(32, 36, 32, 36));
+        heroBanner.setOpaque(false);
+        heroBanner.setPreferredSize(new Dimension(getWidth(), 190));
+        heroBanner.setBorder(new EmptyBorder(24, 32, 24, 32));
 
-        // Center Content Box
-        JPanel centerContent = new JPanel();
-        centerContent.setLayout(new BoxLayout(centerContent, BoxLayout.Y_AXIS));
-        centerContent.setOpaque(false);
+        // Left Hero Text
+        JPanel heroLeft = new JPanel();
+        heroLeft.setLayout(new BoxLayout(heroLeft, BoxLayout.Y_AXIS));
+        heroLeft.setOpaque(false);
 
-        if (scaledLogo80 != null) {
-            JLabel logo = new JLabel(scaledLogo80);
-            logo.setAlignmentX(Component.CENTER_ALIGNMENT);
-            centerContent.add(logo);
-            centerContent.add(Box.createRigidArea(new Dimension(0, 14)));
-        }
+        JLabel updateBadge = new JLabel(" ICE CLIENT 1.21.1 COMPETITIVE ");
+        updateBadge.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        updateBadge.setForeground(new Color(56, 189, 248));
+        updateBadge.setOpaque(true);
+        updateBadge.setBackground(new Color(56, 189, 248, 25));
+        updateBadge.setBorder(new EmptyBorder(3, 8, 3, 8));
+        heroLeft.add(updateBadge);
 
-        JLabel title = new JLabel("ICE CLIENT");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        title.setForeground(Color.WHITE);
-        title.setAlignmentX(Component.CENTER_ALIGNMENT);
-        centerContent.add(title);
+        heroLeft.add(Box.createRigidArea(new Dimension(0, 8)));
 
-        centerContent.add(Box.createRigidArea(new Dimension(0, 6)));
+        JLabel heroTitle = new JLabel("Max Performance & PvP Advantage");
+        heroTitle.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        heroTitle.setForeground(Color.WHITE);
+        heroLeft.add(heroTitle);
 
-        JLabel sub = new JLabel("1000 FPS Competitive Ecosystem • Fabric 1.21.1");
-        sub.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        sub.setForeground(new Color(56, 189, 248));
-        sub.setAlignmentX(Component.CENTER_ALIGNMENT);
-        centerContent.add(sub);
+        heroLeft.add(Box.createRigidArea(new Dimension(0, 6)));
 
-        centerContent.add(Box.createRigidArea(new Dimension(0, 20)));
+        JLabel heroDesc = new JLabel("FastMath acceleration, Small Totem, Low Shield, and In-Game Texture Pack Store.");
+        heroDesc.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        heroDesc.setForeground(new Color(148, 163, 184));
+        heroLeft.add(heroDesc);
 
-        // Quick Feature Pills Row
-        JPanel pillsRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        pillsRow.setOpaque(false);
-        pillsRow.add(createPill("⚡ 1000 FPS Turbo Math"));
-        pillsRow.add(createPill("🛡️ Low Shield & Small Totem"));
-        pillsRow.add(createPill("🎨 In-Game Texture Packs"));
-        pillsRow.add(createPill("🌊 VulkanMod Support"));
-        centerContent.add(pillsRow);
+        heroLeft.add(Box.createRigidArea(new Dimension(0, 14)));
 
-        centerContent.add(Box.createRigidArea(new Dimension(0, 24)));
+        // Action Buttons Row inside Hero
+        JPanel actionBtns = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        actionBtns.setOpaque(false);
 
-        // Community Buttons Row
-        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 0));
-        btnRow.setOpaque(false);
-
-        JButton gitBtn = createLinkButton("GitHub Repository", "https://github.com/Matzified/IceClient");
-        JButton modStoreBtn = createLinkButton("Browse Mod Store", null);
-        modStoreBtn.addActionListener(e -> {
+        JButton storeBtn = new JButton("Explore Mod Store") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                Color bg = getModel().isRollover() ? new Color(2, 132, 199) : new Color(3, 105, 161);
+                g2.setColor(bg);
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 8, 8));
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        storeBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        storeBtn.setForeground(Color.WHITE);
+        storeBtn.setFocusPainted(false);
+        storeBtn.setBorderPainted(false);
+        storeBtn.setContentAreaFilled(false);
+        storeBtn.setPreferredSize(new Dimension(150, 34));
+        storeBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        storeBtn.addActionListener(e -> {
             selectedNavIndex = 2;
             cardLayout.show(mainContentCardPanel, "MODSTORE");
         });
+        actionBtns.add(storeBtn);
 
-        btnRow.add(gitBtn);
-        btnRow.add(modStoreBtn);
-        centerContent.add(btnRow);
-
-        showcaseCard.add(centerContent, BorderLayout.CENTER);
-        page.add(showcaseCard);
-
-        return page;
-    }
-
-    private JLabel createPill(String text) {
-        JLabel pill = new JLabel(" " + text + " ");
-        pill.setFont(new Font("Segoe UI", Font.BOLD, 11));
-        pill.setForeground(new Color(203, 213, 225));
-        pill.setOpaque(true);
-        pill.setBackground(new Color(33, 38, 45));
-        pill.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(48, 54, 61), 1),
-                new EmptyBorder(4, 10, 4, 10)
-        ));
-        return pill;
-    }
-
-    private JButton createLinkButton(String title, String url) {
-        JButton btn = new JButton(title) {
+        JButton gitBtn = new JButton("GitHub Repo") {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -395,27 +389,111 @@ public class IceClientLauncher extends JFrame {
                 Color bg = getModel().isRollover() ? new Color(48, 54, 61) : new Color(33, 38, 45);
                 g2.setColor(bg);
                 g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 8, 8));
-                g2.setColor(new Color(56, 189, 248, 100));
+                g2.setColor(new Color(56, 189, 248, 80));
                 g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 8, 8));
                 g2.dispose();
                 super.paintComponent(g);
             }
         };
-        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btn.setForeground(Color.WHITE);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setContentAreaFilled(false);
-        btn.setPreferredSize(new Dimension(160, 36));
-        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        if (url != null) {
-            btn.addActionListener(e -> {
-                try {
-                    Desktop.getDesktop().browse(URI.create(url));
-                } catch (Exception ignored) {}
-            });
+        gitBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        gitBtn.setForeground(Color.WHITE);
+        gitBtn.setFocusPainted(false);
+        gitBtn.setBorderPainted(false);
+        gitBtn.setContentAreaFilled(false);
+        gitBtn.setPreferredSize(new Dimension(120, 34));
+        gitBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        gitBtn.addActionListener(e -> {
+            try {
+                Desktop.getDesktop().browse(URI.create("https://github.com/Matzified/IceClient"));
+            } catch (Exception ignored) {}
+        });
+        actionBtns.add(gitBtn);
+
+        heroLeft.add(actionBtns);
+        heroBanner.add(heroLeft, BorderLayout.CENTER);
+
+        // Right Hero Artwork Gem
+        if (chromeGemIcon != null) {
+            JLabel gem = new JLabel(chromeGemIcon);
+            heroBanner.add(gem, BorderLayout.EAST);
         }
-        return btn;
+
+        page.add(heroBanner, BorderLayout.NORTH);
+
+        // 2. Quick Server Connect Bar (Lunar Client Feature)
+        JPanel serversBar = new JPanel(new GridLayout(1, 4, 14, 0));
+        serversBar.setOpaque(false);
+
+        serversBar.add(createServerCard("Hypixel Network", "mc.hypixel.net", "Competitive & BedWars"));
+        serversBar.add(createServerCard("Minemen Club", "na.minemen.club", "Ranked 1v1 PvP & Practice"));
+        serversBar.add(createServerCard("GommeHD.net", "gommehd.net", "European BedWars"));
+        serversBar.add(createServerCard("Singleplayer", "Local Worlds", "Zero-Latency Survival"));
+
+        page.add(serversBar, BorderLayout.CENTER);
+
+        return page;
+    }
+
+    private JPanel createServerCard(String name, String ip, String desc) {
+        JPanel card = new JPanel(new BorderLayout(0, 4)) {
+            private boolean isHover = false;
+            {
+                addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseEntered(MouseEvent e) { isHover = true; repaint(); }
+                    @Override
+                    public void mouseExited(MouseEvent e) { isHover = false; repaint(); }
+                });
+            }
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                Color bg = isHover ? new Color(28, 33, 42) : new Color(22, 27, 34);
+                g2.setColor(bg);
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 10, 10));
+                g2.setColor(isHover ? new Color(56, 189, 248, 140) : new Color(48, 54, 61));
+                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 10, 10));
+                g2.dispose();
+            }
+        };
+        card.setOpaque(false);
+        card.setBorder(new EmptyBorder(16, 16, 16, 16));
+
+        // Top Row: Server Name & Online Status
+        JPanel top = new JPanel(new BorderLayout());
+        top.setOpaque(false);
+        JLabel nameLbl = new JLabel(name);
+        nameLbl.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        nameLbl.setForeground(Color.WHITE);
+        top.add(nameLbl, BorderLayout.WEST);
+
+        JLabel ping = new JLabel("● Online");
+        ping.setFont(new Font("Segoe UI", Font.BOLD, 10));
+        ping.setForeground(new Color(52, 211, 153));
+        top.add(ping, BorderLayout.EAST);
+        card.add(top, BorderLayout.NORTH);
+
+        // Center IP & Description
+        JPanel center = new JPanel();
+        center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
+        center.setOpaque(false);
+
+        JLabel ipLbl = new JLabel(ip);
+        ipLbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        ipLbl.setForeground(new Color(56, 189, 248));
+        center.add(ipLbl);
+
+        center.add(Box.createRigidArea(new Dimension(0, 3)));
+
+        JLabel descLbl = new JLabel(desc);
+        descLbl.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        descLbl.setForeground(new Color(148, 163, 184));
+        center.add(descLbl);
+
+        card.add(center, BorderLayout.CENTER);
+        return card;
     }
 
     private JPanel createBottomLaunchBar() {
