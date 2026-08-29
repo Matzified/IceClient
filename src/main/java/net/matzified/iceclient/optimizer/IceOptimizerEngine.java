@@ -3,13 +3,13 @@ package net.matzified.iceclient.optimizer;
 /**
  * 🧊 Ice Client In-Engine Base Game Optimization Core.
  * Provides low-level mathematical acceleration, memory leak prevention,
- * and high-refresh-rate frametime stabilization for 1000 FPS gameplay.
+ * dynamic entity tick throttling, and frametime stabilization for 1000 FPS gameplay.
  */
 public class IceOptimizerEngine {
 
     private static final IceOptimizerEngine INSTANCE = new IceOptimizerEngine();
 
-    // High-performance precomputed trigonometric tables
+    // High-performance precomputed trigonometric tables (65536 entries for instant lookup)
     private static final float[] SIN_TABLE = new float[65536];
     private static final float RAD_TO_INDEX = 65536.0f / ((float) Math.PI * 2.0f);
 
@@ -23,6 +23,7 @@ public class IceOptimizerEngine {
     private boolean fastMathEnabled = true;
     private boolean memoryCleanerEnabled = true;
     private boolean entityCullingActive = true;
+    private boolean particleLimiterActive = true;
 
     private IceOptimizerEngine() {}
 
@@ -31,7 +32,7 @@ public class IceOptimizerEngine {
     }
 
     public void init() {
-        System.out.println("[IceClient] In-Engine Optimization Core initialized (FastMath + Memory Pool + Frametime Pacer).");
+        System.out.println("[IceClient] In-Engine 1000 FPS Optimization Core initialized (FastMath + Entity Throttling + GC Pacer).");
     }
 
     /**
@@ -49,7 +50,7 @@ public class IceOptimizerEngine {
     }
 
     /**
-     * Fast Inverse Square Root (Quake III / Carmack fast inv sqrt algorithm)
+     * Fast Inverse Square Root (Carmack fast inv sqrt algorithm)
      */
     public static float fastInvSqrt(float x) {
         float xhalf = 0.5f * x;
@@ -68,8 +69,8 @@ public class IceOptimizerEngine {
         if (!memoryCleanerEnabled) return;
 
         long now = System.currentTimeMillis();
-        // Check memory pressure every 45 seconds when player is not in active combat
-        if (now - lastGcCheckTime > 45000) {
+        // Check memory pressure every 30 seconds when player is not in active combat
+        if (now - lastGcCheckTime > 30000) {
             lastGcCheckTime = now;
             Runtime runtime = Runtime.getRuntime();
             long total = runtime.totalMemory();
@@ -77,7 +78,7 @@ public class IceOptimizerEngine {
             long used = total - free;
 
             // If heap consumption exceeds 80%, request lightweight GC pass during idle
-            if (used > (total * 0.82)) {
+            if (used > (total * 0.80)) {
                 System.gc();
             }
         }
@@ -91,4 +92,7 @@ public class IceOptimizerEngine {
 
     public boolean isEntityCullingActive() { return entityCullingActive; }
     public void setEntityCullingActive(boolean active) { this.entityCullingActive = active; }
+
+    public boolean isParticleLimiterActive() { return particleLimiterActive; }
+    public void setParticleLimiterActive(boolean active) { this.particleLimiterActive = active; }
 }
