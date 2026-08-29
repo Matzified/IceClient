@@ -1,0 +1,44 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'net.matzified'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.formdev:flatlaf:3.4.1'
+    implementation 'org.openjfx:javafx-controls:21:win'
+    implementation 'org.openjfx:javafx-graphics:21:win'
+    implementation 'org.openjfx:javafx-base:21:win'
+    implementation 'org.openjfx:javafx-swing:21:win'
+    implementation 'org.openjfx:javafx-web:21:win'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+application {
+    mainClass = 'net.matzified.iceclient.launcher.IceClientLauncher'
+}
+
+jar {
+    manifest {
+        attributes(
+            'Main-Class': 'net.matzified.iceclient.launcher.IceClientLauncher'
+        )
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveFileName = 'IceClientLauncher.jar'
+}

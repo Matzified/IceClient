@@ -1,0 +1,30 @@
+﻿{
+  "schemaVersion": 1,
+  "id": "iceclient",
+  "version": "${version}",
+  "name": "Ice Client",
+  "description": "Massive FPS Boost & Performance Mod Client for Fabric 1.21.1",
+  "authors": [
+    "Matzified"
+  ],
+  "contact": {
+    "homepage": "https://github.com/Matzified/IceClient",
+    "sources": "https://github.com/Matzified/IceClient"
+  },
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "net.matzified.iceclient.IceClient"
+    ]
+  },
+  "mixins": [
+    "iceclient.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

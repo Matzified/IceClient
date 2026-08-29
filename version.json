@@ -1,0 +1,7 @@
+{
+  "version": "1.0.0",
+  "mcVersions": "1.21-1.21.11",
+  "releaseNotes": "Official Ice Client Release with Fabric 1.21 support, Microsoft Auth, Lunar UI, and FPS optimizations.",
+  "downloadUrl": "https://raw.githubusercontent.com/Matzified/IceClient/main/build/dist/IceClientLauncher.jar",
+  "installerUrl": "https://raw.githubusercontent.com/Matzified/IceClient/main/build/dist/IceClientSetup.exe"
+}

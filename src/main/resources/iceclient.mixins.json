@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "net.matzified.iceclient.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "ParticleManagerMixin",
+    "MinecraftClientMixin",
+    "GameMenuScreenMixin",
+    "TitleScreenMixin",
+    "KeyboardMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
