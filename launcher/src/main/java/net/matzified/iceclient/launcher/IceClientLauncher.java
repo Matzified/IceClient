@@ -18,7 +18,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.io.InputStream;
-import java.net.URI;
 
 public class IceClientLauncher extends JFrame {
 
@@ -31,8 +30,6 @@ public class IceClientLauncher extends JFrame {
 
     private JButton launchGameBtn;
     private JLabel activeProfileSubLabel;
-    private JLabel playerNameLbl;
-    private JLabel welcomeLbl;
 
     private ProfileManagerPanel profileManagerPanel;
     private ModsManagerPanel modsManagerPanel;
@@ -43,13 +40,9 @@ public class IceClientLauncher extends JFrame {
     private AccountSwitcherPopup accountSwitcherPopup;
 
     private volatile Process runningProcess = null;
-
-    private enum LaunchState { READY, STARTING, RUNNING }
-    private LaunchState launchState = LaunchState.READY;
-
-    private ImageIcon logoIcon;
     private int selectedNavIndex = 0;
     private final JButton[] dockTabs = new JButton[5];
+    private ImageIcon logoIcon;
 
     public IceClientLauncher() {
         setUndecorated(true);
@@ -66,14 +59,41 @@ public class IceClientLauncher extends JFrame {
 
         AutoUpdater.checkForUpdatesAsync(this);
 
-        getContentPane().setBackground(new Color(11, 14, 20));
-        setLayout(new BorderLayout());
+        // Futuristic Ambient Canvas Background
+        JPanel rootPanel = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                // Multi-Stop Deep Cyan-Sapphire Void Gradient
+                GradientPaint bgGrad = new GradientPaint(0, 0, new Color(7, 10, 16), getWidth(), getHeight(), new Color(11, 16, 26));
+                g2.setPaint(bgGrad);
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 24, 24));
 
-        // 1. Top Custom Window Bar
+                // Subtle Top Radial Ambient Light
+                RadialGradientPaint ambient = new RadialGradientPaint(
+                        new Point(getWidth() / 2, 40),
+                        getWidth() / 2f,
+                        new float[]{0.0f, 1.0f},
+                        new Color[]{new Color(56, 189, 248, 25), new Color(0, 0, 0, 0)}
+                );
+                g2.setPaint(ambient);
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 24, 24));
+
+                // Outer Glowing Border
+                g2.setColor(new Color(56, 189, 248, 80));
+                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 24, 24));
+                g2.dispose();
+            }
+        };
+        rootPanel.setOpaque(false);
+        setContentPane(rootPanel);
+
+        // 1. Custom Top Bar
         JPanel windowTitleBar = createWindowTitleBar();
-        add(windowTitleBar, BorderLayout.NORTH);
+        rootPanel.add(windowTitleBar, BorderLayout.NORTH);
 
-        // 2. Center Content Area (Cards)
+        // 2. Card Content Area
         cardLayout = new CardLayout();
         mainContentCardPanel = new JPanel(cardLayout);
         mainContentCardPanel.setOpaque(false);
@@ -90,11 +110,11 @@ public class IceClientLauncher extends JFrame {
         mainContentCardPanel.add(modsManagerPanel, "MODS");
         mainContentCardPanel.add(loginPanel, "ACCOUNTS");
 
-        add(mainContentCardPanel, BorderLayout.CENTER);
+        rootPanel.add(mainContentCardPanel, BorderLayout.CENTER);
 
-        // 3. Centered Bottom Navigation Dock
+        // 3. Centered Futuristic Floating Dock
         JPanel bottomBar = createCenteredBottomDock();
-        add(bottomBar, BorderLayout.SOUTH);
+        rootPanel.add(bottomBar, BorderLayout.SOUTH);
 
         // Launch Overlay Layer
         launchOverlay = new LaunchOverlayPanel();
@@ -131,11 +151,11 @@ public class IceClientLauncher extends JFrame {
 
     private JPanel createWindowTitleBar() {
         JPanel bar = new JPanel(new BorderLayout());
-        bar.setBackground(new Color(9, 12, 18));
-        bar.setPreferredSize(new Dimension(getWidth(), 52));
-        bar.setBorder(new EmptyBorder(0, 20, 0, 16));
+        bar.setOpaque(false);
+        bar.setPreferredSize(new Dimension(getWidth(), 56));
+        bar.setBorder(new EmptyBorder(6, 24, 0, 20));
 
-        // Window drag listener
+        // Drag Listener
         bar.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) { dragOffset = e.getPoint(); }
@@ -149,29 +169,31 @@ public class IceClientLauncher extends JFrame {
         });
 
         // Left Branding
-        JPanel leftBrand = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        JPanel leftBrand = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
         leftBrand.setOpaque(false);
 
         JLabel logoText = new JLabel("🧊 ICE CLIENT");
-        logoText.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        logoText.setFont(new Font("Segoe UI", Font.BOLD, 17));
         logoText.setForeground(new Color(56, 189, 248));
         leftBrand.add(logoText);
 
-        JLabel tagPill = new JLabel(" 1000 FPS COMPETITIVE ");
+        JLabel tagPill = new JLabel(" ⚡ 1000 FPS COMPETITIVE ");
         tagPill.setFont(new Font("Segoe UI", Font.BOLD, 10));
-        tagPill.setForeground(new Color(148, 163, 184));
+        tagPill.setForeground(new Color(56, 189, 248));
         tagPill.setOpaque(true);
-        tagPill.setBackground(new Color(20, 28, 44));
-        tagPill.setBorder(new EmptyBorder(3, 8, 3, 8));
+        tagPill.setBackground(new Color(18, 28, 46));
+        tagPill.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(56, 189, 248, 80), 1),
+                new EmptyBorder(3, 8, 3, 8)
+        ));
         leftBrand.add(tagPill);
 
         bar.add(leftBrand, BorderLayout.WEST);
 
-        // Right Account & Window Control Buttons
-        JPanel rightActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 8));
+        // Right Actions (Account Pill + Minimize + Close)
+        JPanel rightActions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 8));
         rightActions.setOpaque(false);
 
-        // Active Account Pill
         Account activeAcc = accountManager.getActiveAccount();
         String playerName = activeAcc != null ? activeAcc.getUsername() : "IcePlayer";
 
@@ -180,7 +202,7 @@ public class IceClientLauncher extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                Color bg = getModel().isRollover() ? new Color(28, 36, 52) : new Color(18, 24, 38);
+                Color bg = getModel().isRollover() ? new Color(24, 34, 52) : new Color(16, 22, 34);
                 g2.setColor(bg);
                 g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 10, 10));
                 g2.setColor(new Color(56, 189, 248, 100));
@@ -199,7 +221,6 @@ public class IceClientLauncher extends JFrame {
         accountBtn.addActionListener(e -> new MicrosoftLoginDialog(this, this::onAccountStateChanged).setVisible(true));
         rightActions.add(accountBtn);
 
-        // Minimize Button
         JButton minBtn = new JButton("—");
         minBtn.setFont(new Font("Segoe UI", Font.BOLD, 13));
         minBtn.setForeground(new Color(148, 163, 184));
@@ -210,7 +231,6 @@ public class IceClientLauncher extends JFrame {
         minBtn.addActionListener(e -> setState(Frame.ICONIFIED));
         rightActions.add(minBtn);
 
-        // Close Button
         JButton closeBtn = new JButton("✕");
         closeBtn.setFont(new Font("Segoe UI", Font.BOLD, 14));
         closeBtn.setForeground(new Color(239, 68, 68));
@@ -227,8 +247,8 @@ public class IceClientLauncher extends JFrame {
 
     private JPanel createCenteredBottomDock() {
         JPanel dockContainer = new JPanel(new BorderLayout());
-        dockContainer.setBackground(new Color(9, 12, 18));
-        dockContainer.setBorder(new EmptyBorder(10, 20, 14, 20));
+        dockContainer.setOpaque(false);
+        dockContainer.setBorder(new EmptyBorder(8, 20, 16, 20));
 
         // Floating Glass Dock Box
         JPanel dockPill = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 6)) {
@@ -236,16 +256,16 @@ public class IceClientLauncher extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(16, 20, 30));
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 16, 16));
-                g2.setColor(new Color(56, 189, 248, 60));
-                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 16, 16));
+                g2.setColor(new Color(14, 18, 28, 240));
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 18, 18));
+                g2.setColor(new Color(56, 189, 248, 80));
+                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 18, 18));
                 g2.dispose();
             }
         };
         dockPill.setOpaque(false);
 
-        String[] tabNames = {"🎮 PLAY", "📦 PROFILES", "🛒 MOD STORE", "🧩 MODS", "👤 ACCOUNTS"};
+        String[] tabNames = {"🎮 LAUNCHPAD", "📦 PROFILES", "🛒 MOD STORE", "🧩 MODS", "👤 ACCOUNTS"};
         String[] cardNames = {"LAUNCHPAD", "PROFILES", "MODSTORE", "MODS", "ACCOUNTS"};
 
         for (int i = 0; i < tabNames.length; i++) {
@@ -257,12 +277,12 @@ public class IceClientLauncher extends JFrame {
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     boolean isSel = (selectedNavIndex == idx);
-                    Color bg = isSel ? new Color(2, 132, 199) : (getModel().isRollover() ? new Color(28, 36, 52) : new Color(0, 0, 0, 0));
+                    Color bg = isSel ? new Color(2, 132, 199) : (getModel().isRollover() ? new Color(24, 32, 48) : new Color(0, 0, 0, 0));
                     g2.setColor(bg);
-                    g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 10, 10));
+                    g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 12, 12));
                     if (isSel) {
                         g2.setColor(new Color(56, 189, 248));
-                        g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 10, 10));
+                        g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 12, 12));
                     }
                     g2.dispose();
                     super.paintComponent(g);
@@ -273,7 +293,7 @@ public class IceClientLauncher extends JFrame {
             tab.setFocusPainted(false);
             tab.setBorderPainted(false);
             tab.setContentAreaFilled(false);
-            tab.setPreferredSize(new Dimension(140, 36));
+            tab.setPreferredSize(new Dimension(145, 38));
             tab.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
             tab.addActionListener(e -> {
@@ -293,7 +313,7 @@ public class IceClientLauncher extends JFrame {
     private JPanel createLaunchpadPage() {
         JPanel page = new JPanel(new BorderLayout(18, 18));
         page.setOpaque(false);
-        page.setBorder(new EmptyBorder(20, 28, 14, 28));
+        page.setBorder(new EmptyBorder(16, 28, 12, 28));
 
         // 1. Hero Showcase Banner
         JPanel heroBanner = new JPanel(new BorderLayout()) {
@@ -301,30 +321,30 @@ public class IceClientLauncher extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                GradientPaint gp = new GradientPaint(0, 0, new Color(14, 22, 38), getWidth(), getHeight(), new Color(9, 14, 24));
+                GradientPaint gp = new GradientPaint(0, 0, new Color(14, 24, 44), getWidth(), getHeight(), new Color(9, 14, 24));
                 g2.setPaint(gp);
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 16, 16));
-                g2.setColor(new Color(56, 189, 248, 100));
-                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 16, 16));
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 18, 18));
+                g2.setColor(new Color(56, 189, 248, 120));
+                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 18, 18));
                 g2.dispose();
             }
         };
         heroBanner.setOpaque(false);
         heroBanner.setPreferredSize(new Dimension(getWidth(), 140));
-        heroBanner.setBorder(new EmptyBorder(22, 28, 22, 28));
+        heroBanner.setBorder(new EmptyBorder(24, 28, 24, 28));
 
         JPanel heroText = new JPanel();
         heroText.setLayout(new BoxLayout(heroText, BoxLayout.Y_AXIS));
         heroText.setOpaque(false);
 
-        JLabel heroTitle = new JLabel("ICE CLIENT • 1000 FPS COMPETITIVE ECOSYSTEM");
+        JLabel heroTitle = new JLabel("ICE CLIENT • 1000 FPS COMPETITIVE SUITE");
         heroTitle.setFont(new Font("Segoe UI", Font.BOLD, 22));
         heroTitle.setForeground(new Color(56, 189, 248));
         heroText.add(heroTitle);
 
         heroText.add(Box.createRigidArea(new Dimension(0, 6)));
 
-        JLabel heroSub = new JLabel("Low-latency mathematical fast-math acceleration, VulkanMod support & 38+ fair-play PvP modules.");
+        JLabel heroSub = new JLabel("In-Engine FastMath lookup tables, VulkanMod architecture & 38+ custom HUD/PvP modules.");
         heroSub.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         heroSub.setForeground(new Color(148, 163, 184));
         heroText.add(heroSub);
@@ -342,22 +362,22 @@ public class IceClientLauncher extends JFrame {
 
         page.add(mediaGrid, BorderLayout.CENTER);
 
-        // 3. Big Glowing Launch Footer Bar
+        // 3. Glowing Big Launch Bar
         JPanel launchBar = new JPanel(new BorderLayout(20, 0)) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(16, 20, 30));
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 14, 14));
-                g2.setColor(new Color(56, 189, 248, 80));
-                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 14, 14));
+                g2.setColor(new Color(14, 18, 28));
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 16, 16));
+                g2.setColor(new Color(56, 189, 248, 100));
+                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 16, 16));
                 g2.dispose();
             }
         };
         launchBar.setOpaque(false);
-        launchBar.setPreferredSize(new Dimension(getWidth(), 76));
-        launchBar.setBorder(new EmptyBorder(12, 22, 12, 22));
+        launchBar.setPreferredSize(new Dimension(getWidth(), 80));
+        launchBar.setBorder(new EmptyBorder(14, 24, 14, 24));
 
         // Active Profile Info
         JPanel profInfo = new JPanel(new GridLayout(2, 1, 0, 2));
@@ -371,7 +391,7 @@ public class IceClientLauncher extends JFrame {
         profTitle.setFont(new Font("Segoe UI", Font.BOLD, 15));
         profTitle.setForeground(Color.WHITE);
 
-        activeProfileSubLabel = new JLabel("Fabric 1.21.1 • In-Engine FastMath & Ice HUD Active");
+        activeProfileSubLabel = new JLabel("Fabric " + pVer + " • In-Engine FastMath & Ice HUD Active");
         activeProfileSubLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         activeProfileSubLabel.setForeground(new Color(56, 189, 248));
 
@@ -385,9 +405,11 @@ public class IceClientLauncher extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                Color bg = getModel().isRollover() ? new Color(2, 132, 199) : new Color(3, 105, 161);
-                g2.setColor(bg);
+                GradientPaint btnGrad = new GradientPaint(0, 0, new Color(2, 132, 199), getWidth(), getHeight(), new Color(14, 165, 233));
+                g2.setPaint(btnGrad);
                 g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 12, 12));
+                g2.setColor(new Color(186, 230, 253, 180));
+                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 12, 12));
                 g2.dispose();
                 super.paintComponent(g);
             }
@@ -397,7 +419,7 @@ public class IceClientLauncher extends JFrame {
         launchGameBtn.setFocusPainted(false);
         launchGameBtn.setBorderPainted(false);
         launchGameBtn.setContentAreaFilled(false);
-        launchGameBtn.setPreferredSize(new Dimension(240, 50));
+        launchGameBtn.setPreferredSize(new Dimension(240, 52));
         launchGameBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         launchGameBtn.addActionListener(e -> onLaunchClicked());
 
@@ -413,10 +435,10 @@ public class IceClientLauncher extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(16, 20, 30));
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 14, 14));
+                g2.setColor(new Color(14, 18, 28));
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 16, 16));
                 g2.setColor(new Color(255, 255, 255, 15));
-                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 14, 14));
+                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 16, 16));
                 g2.dispose();
             }
         };
@@ -463,6 +485,8 @@ public class IceClientLauncher extends JFrame {
     }
 
     private void onProfileStateChanged() {
+        profileManagerPanel.refreshProfiles();
+        modsManagerPanel.refreshMods();
         repaint();
     }
 
