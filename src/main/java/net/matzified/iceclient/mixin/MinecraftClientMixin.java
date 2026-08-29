@@ -23,7 +23,7 @@ public class MinecraftClientMixin {
 
     @Inject(method = "doAttack", at = @At("HEAD"))
     private void iceclient$onLeftClick(CallbackInfoReturnable<Boolean> cir) {
-        CpsModule.registerClick(0);
+        CpsModule.registerClick(false);
 
         if (crosshairTarget != null && crosshairTarget.getType() == HitResult.Type.ENTITY && player != null) {
             EntityHitResult entityHit = (EntityHitResult) crosshairTarget;
@@ -38,6 +38,6 @@ public class MinecraftClientMixin {
 
     @Inject(method = "doItemUse", at = @At("HEAD"))
     private void iceclient$onRightClick(CallbackInfo ci) {
-        CpsModule.registerClick(1);
+        CpsModule.registerClick(true);
     }
 }

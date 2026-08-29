@@ -74,7 +74,7 @@ public class ModrinthApiHandler {
 
             String urlStr = "https://api.modrinth.com/v2/search?query=" + encodedQuery + "&facets=" + facetsParam + "&limit=24";
 
-            URL url = new URL(urlStr);
+            URL url = java.net.URI.create(urlStr).toURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
             conn.setRequestProperty("User-Agent", "IceClientLauncher/1.0.0");
@@ -136,7 +136,7 @@ public class ModrinthApiHandler {
 
                 // 1. Try querying specific version
                 String versionsUrl = "https://api.modrinth.com/v2/project/" + item.projectId + "/version";
-                URL url = new URL(versionsUrl);
+                URL url = java.net.URI.create(versionsUrl).toURL();
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 conn.setRequestProperty("User-Agent", "IceClientLauncher/1.0.0");
@@ -176,7 +176,7 @@ public class ModrinthApiHandler {
                             File destFile = new File(targetDir, filename);
 
                             // Download file
-                            URL downloadHttp = new URL(downloadUrl);
+                            URL downloadHttp = java.net.URI.create(downloadUrl).toURL();
                             try (InputStream in = downloadHttp.openStream()) {
                                 Files.copy(in, destFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                             }
