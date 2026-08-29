@@ -13,6 +13,7 @@ import net.minecraft.client.render.RenderTickCounter;
  * - Screen fire overlay height (Low Fire)
  * - Ground fire height
  * - First-person held shield height offset (Low Shield)
+ * - Small Totem / Low Totem scale & height offset
  * - Pumpkin and Portal overlay obstructions
  */
 public class OverlayModule extends Module {
@@ -22,6 +23,9 @@ public class OverlayModule extends Module {
     private final NumberSetting screenFireHeight;
     private final BooleanSetting lowShield;
     private final NumberSetting shieldHeight;
+    private final BooleanSetting smallTotem;
+    private final NumberSetting totemScale;
+    private final NumberSetting totemHeight;
     private final NumberSetting groundFireHeight;
     private final BooleanSetting noPumpkin;
     private final BooleanSetting noPortal;
@@ -30,7 +34,7 @@ public class OverlayModule extends Module {
         super(
                 "overlay",
                 "Overlay",
-                "Customize screen fire height, ground fire, and shield height for competitive visibility",
+                "Customize screen fire, low shield, and small totem for competitive visibility",
                 Category.VISUAL,
                 true,
                 0,
@@ -65,6 +69,33 @@ public class OverlayModule extends Module {
                 0.05
         );
 
+        this.smallTotem = new BooleanSetting(
+                "small_totem",
+                "Small Totem",
+                "Shrinks and lowers held Totem of Undying to prevent screen blocking",
+                true
+        );
+
+        this.totemScale = new NumberSetting(
+                "totem_scale",
+                "Totem Scale",
+                "Scale size of the held Totem of Undying (0.65 = compact)",
+                0.65,
+                0.2,
+                1.0,
+                0.05
+        );
+
+        this.totemHeight = new NumberSetting(
+                "totem_height",
+                "Totem Height Offset",
+                "How low the totem sits in your hand",
+                0.30,
+                0.0,
+                1.0,
+                0.05
+        );
+
         this.groundFireHeight = new NumberSetting(
                 "ground_fire_height",
                 "Ground Fire Height",
@@ -92,6 +123,9 @@ public class OverlayModule extends Module {
         addSetting(screenFireHeight);
         addSetting(lowShield);
         addSetting(shieldHeight);
+        addSetting(smallTotem);
+        addSetting(totemScale);
+        addSetting(totemHeight);
         addSetting(groundFireHeight);
         addSetting(noPumpkin);
         addSetting(noPortal);
@@ -103,7 +137,6 @@ public class OverlayModule extends Module {
 
     public double getScreenFireOffset() {
         if (!isEnabled()) return 0.0;
-        // 0.0 = normal, 1.0 = lowest
         return screenFireHeight.getValue();
     }
 
@@ -114,6 +147,20 @@ public class OverlayModule extends Module {
     public double getShieldOffset() {
         if (!isEnabled() || !lowShield.getValue()) return 0.0;
         return shieldHeight.getValue();
+    }
+
+    public boolean isSmallTotemActive() {
+        return isEnabled() && smallTotem.getValue();
+    }
+
+    public double getTotemScale() {
+        if (!isEnabled() || !smallTotem.getValue()) return 1.0;
+        return totemScale.getValue();
+    }
+
+    public double getTotemOffset() {
+        if (!isEnabled() || !smallTotem.getValue()) return 0.0;
+        return totemHeight.getValue();
     }
 
     public double getGroundFireScale() {
@@ -131,6 +178,6 @@ public class OverlayModule extends Module {
 
     @Override
     public void render(DrawContext context, RenderTickCounter tickCounter) {
-        // Overlay module modifies rendering hooks, no separate HUD text widget needed
+        // Render hooks handled in mixins
     }
 }

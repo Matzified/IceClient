@@ -19,7 +19,6 @@ import java.awt.event.MouseEvent;
 import java.awt.geom.RoundRectangle2D;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.List;
 
 public class IceClientLauncher extends JFrame {
 
@@ -32,7 +31,6 @@ public class IceClientLauncher extends JFrame {
 
     private JButton launchGameBtn;
     private JButton versionSelectBtn;
-    private JLabel activeProfileSubLabel;
 
     private ProfileManagerPanel profileManagerPanel;
     private ModsManagerPanel modsManagerPanel;
@@ -47,6 +45,7 @@ public class IceClientLauncher extends JFrame {
     private final JButton[] dockTabs = new JButton[5];
     private ImageIcon logoIcon;
     private ImageIcon scaledLogo28;
+    private ImageIcon scaledLogo80;
 
     public IceClientLauncher() {
         setUndecorated(true);
@@ -69,10 +68,8 @@ public class IceClientLauncher extends JFrame {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                // Clean solid dark slate canvas
                 g2.setColor(new Color(14, 17, 23));
                 g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 16, 16));
-                // Hairline clean border
                 g2.setColor(new Color(48, 54, 61));
                 g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 16, 16));
                 g2.dispose();
@@ -81,7 +78,7 @@ public class IceClientLauncher extends JFrame {
         rootPanel.setOpaque(false);
         setContentPane(rootPanel);
 
-        // 1. Lunar-Style Top Navbar
+        // 1. Top Navbar
         JPanel topNavbar = createTopNavbar();
         rootPanel.add(topNavbar, BorderLayout.NORTH);
 
@@ -104,7 +101,7 @@ public class IceClientLauncher extends JFrame {
 
         rootPanel.add(mainContentCardPanel, BorderLayout.CENTER);
 
-        // 3. Lunar-Style Bottom Launch Bar
+        // 3. Bottom Launch Bar
         JPanel bottomLaunchBar = createBottomLaunchBar();
         rootPanel.add(bottomLaunchBar, BorderLayout.SOUTH);
 
@@ -128,6 +125,14 @@ public class IceClientLauncher extends JFrame {
                 }
             }
         });
+
+        // Prompt first-time login if no saved account exists
+        SwingUtilities.invokeLater(() -> {
+            Account active = accountManager.getActiveAccount();
+            if (active == null || "IcePlayer".equalsIgnoreCase(active.getUsername()) || active.getUsername().contains("default")) {
+                new MicrosoftLoginDialog(this, this::onAccountStateChanged).setVisible(true);
+            }
+        });
     }
 
     private void loadLogo() {
@@ -137,6 +142,7 @@ public class IceClientLauncher extends JFrame {
                 if (img != null) {
                     logoIcon = new ImageIcon(img);
                     scaledLogo28 = new ImageIcon(img.getScaledInstance(28, 28, Image.SCALE_SMOOTH));
+                    scaledLogo80 = new ImageIcon(img.getScaledInstance(80, 80, Image.SCALE_SMOOTH));
                 }
             }
         } catch (Exception ignored) {}
@@ -177,7 +183,7 @@ public class IceClientLauncher extends JFrame {
 
         bar.add(leftBrand, BorderLayout.WEST);
 
-        // Center Navigation Tabs (Clean Lunar Style)
+        // Center Navigation Tabs
         JPanel navCenter = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 10));
         navCenter.setOpaque(false);
 
@@ -287,60 +293,101 @@ public class IceClientLauncher extends JFrame {
     }
 
     private JPanel createLunarHomePage() {
-        JPanel page = new JPanel(new BorderLayout(0, 18));
+        JPanel page = new JPanel(new GridBagLayout());
         page.setOpaque(false);
-        page.setBorder(new EmptyBorder(20, 24, 16, 24));
+        page.setBorder(new EmptyBorder(24, 32, 24, 32));
 
-        // 1. Clean Hero Banner (Authentic Lunar Feature Banner)
-        JPanel heroBanner = new JPanel(new BorderLayout(20, 0)) {
+        JPanel showcaseCard = new JPanel(new BorderLayout(24, 18)) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(new Color(22, 27, 34));
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 12, 12));
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 16, 16));
                 g2.setColor(new Color(48, 54, 61));
-                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 12, 12));
+                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 16, 16));
                 g2.dispose();
             }
         };
-        heroBanner.setOpaque(false);
-        heroBanner.setPreferredSize(new Dimension(getWidth(), 140));
-        heroBanner.setBorder(new EmptyBorder(22, 24, 22, 24));
+        showcaseCard.setOpaque(false);
+        showcaseCard.setPreferredSize(new Dimension(840, 360));
+        showcaseCard.setBorder(new EmptyBorder(32, 36, 32, 36));
 
-        JPanel heroLeft = new JPanel();
-        heroLeft.setLayout(new BoxLayout(heroLeft, BoxLayout.Y_AXIS));
-        heroLeft.setOpaque(false);
+        // Center Content Box
+        JPanel centerContent = new JPanel();
+        centerContent.setLayout(new BoxLayout(centerContent, BoxLayout.Y_AXIS));
+        centerContent.setOpaque(false);
 
-        JLabel tagPill = new JLabel(" FEATURED UPDATE ");
-        tagPill.setFont(new Font("Segoe UI", Font.BOLD, 10));
-        tagPill.setForeground(new Color(56, 189, 248));
-        tagPill.setOpaque(true);
-        tagPill.setBackground(new Color(56, 189, 248, 25));
-        tagPill.setBorder(new EmptyBorder(3, 8, 3, 8));
-        heroLeft.add(tagPill);
+        if (scaledLogo80 != null) {
+            JLabel logo = new JLabel(scaledLogo80);
+            logo.setAlignmentX(Component.CENTER_ALIGNMENT);
+            centerContent.add(logo);
+            centerContent.add(Box.createRigidArea(new Dimension(0, 14)));
+        }
 
-        heroLeft.add(Box.createRigidArea(new Dimension(0, 6)));
-
-        JLabel title = new JLabel("Ice Client 1.21.1 Performance & HUD Suite");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        JLabel title = new JLabel("ICE CLIENT");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 26));
         title.setForeground(Color.WHITE);
-        heroLeft.add(title);
+        title.setAlignmentX(Component.CENTER_ALIGNMENT);
+        centerContent.add(title);
 
-        heroLeft.add(Box.createRigidArea(new Dimension(0, 4)));
+        centerContent.add(Box.createRigidArea(new Dimension(0, 6)));
 
-        JLabel desc = new JLabel("High-performance base game mathematical acceleration, modern 1.21 PvP tools & 38+ modules.");
-        desc.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        desc.setForeground(new Color(148, 163, 184));
-        heroLeft.add(desc);
+        JLabel sub = new JLabel("1000 FPS Competitive Ecosystem • Fabric 1.21.1");
+        sub.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        sub.setForeground(new Color(56, 189, 248));
+        sub.setAlignmentX(Component.CENTER_ALIGNMENT);
+        centerContent.add(sub);
 
-        heroBanner.add(heroLeft, BorderLayout.WEST);
+        centerContent.add(Box.createRigidArea(new Dimension(0, 20)));
 
-        // Hero Right Action Button
-        JPanel heroRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 24));
-        heroRight.setOpaque(false);
+        // Quick Feature Pills Row
+        JPanel pillsRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+        pillsRow.setOpaque(false);
+        pillsRow.add(createPill("⚡ 1000 FPS Turbo Math"));
+        pillsRow.add(createPill("🛡️ Low Shield & Small Totem"));
+        pillsRow.add(createPill("🎨 In-Game Texture Packs"));
+        pillsRow.add(createPill("🌊 VulkanMod Support"));
+        centerContent.add(pillsRow);
 
-        JButton patchNotesBtn = new JButton("View Patch Notes") {
+        centerContent.add(Box.createRigidArea(new Dimension(0, 24)));
+
+        // Community Buttons Row
+        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 0));
+        btnRow.setOpaque(false);
+
+        JButton gitBtn = createLinkButton("GitHub Repository", "https://github.com/Matzified/IceClient");
+        JButton modStoreBtn = createLinkButton("Browse Mod Store", null);
+        modStoreBtn.addActionListener(e -> {
+            selectedNavIndex = 2;
+            cardLayout.show(mainContentCardPanel, "MODSTORE");
+        });
+
+        btnRow.add(gitBtn);
+        btnRow.add(modStoreBtn);
+        centerContent.add(btnRow);
+
+        showcaseCard.add(centerContent, BorderLayout.CENTER);
+        page.add(showcaseCard);
+
+        return page;
+    }
+
+    private JLabel createPill(String text) {
+        JLabel pill = new JLabel(" " + text + " ");
+        pill.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        pill.setForeground(new Color(203, 213, 225));
+        pill.setOpaque(true);
+        pill.setBackground(new Color(33, 38, 45));
+        pill.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(48, 54, 61), 1),
+                new EmptyBorder(4, 10, 4, 10)
+        ));
+        return pill;
+    }
+
+    private JButton createLinkButton(String title, String url) {
+        JButton btn = new JButton(title) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -354,95 +401,21 @@ public class IceClientLauncher extends JFrame {
                 super.paintComponent(g);
             }
         };
-        patchNotesBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        patchNotesBtn.setForeground(Color.WHITE);
-        patchNotesBtn.setFocusPainted(false);
-        patchNotesBtn.setBorderPainted(false);
-        patchNotesBtn.setContentAreaFilled(false);
-        patchNotesBtn.setPreferredSize(new Dimension(140, 36));
-        patchNotesBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        patchNotesBtn.addActionListener(e -> {
-            try {
-                Desktop.getDesktop().browse(URI.create("https://github.com/Matzified/IceClient"));
-            } catch (Exception ignored) {}
-        });
-        heroRight.add(patchNotesBtn);
-
-        heroBanner.add(heroRight, BorderLayout.EAST);
-        page.add(heroBanner, BorderLayout.NORTH);
-
-        // 2. News / Feature Cards (Lunar Style 3-Column Grid)
-        JPanel newsGrid = new JPanel(new GridLayout(1, 3, 16, 0));
-        newsGrid.setOpaque(false);
-
-        newsGrid.add(createLunarNewsCard("⚡ In-Engine Optimization", "Precomputed FastMath trig tables and memory cleaners provide 1000 FPS without micro-stutters.", "Engine"));
-        newsGrid.add(createLunarNewsCard("🛡️ Modern 1.21+ PvP Suite", "Mace bonus damage multiplier, Wind Charge counter, and Shield disable tracking.", "PvP"));
-        newsGrid.add(createLunarNewsCard("🌊 Vulkan API Support", "Native zero-overhead VulkanMod integration for seamless multi-threaded rendering.", "Graphics"));
-
-        page.add(newsGrid, BorderLayout.CENTER);
-
-        return page;
-    }
-
-    private JPanel createLunarNewsCard(String title, String desc, String category) {
-        JPanel card = new JPanel(new BorderLayout(0, 8)) {
-            private boolean isHover = false;
-            {
-                addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseEntered(MouseEvent e) { isHover = true; repaint(); }
-                    @Override
-                    public void mouseExited(MouseEvent e) { isHover = false; repaint(); }
-                });
-            }
-
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                Color bg = isHover ? new Color(28, 33, 40) : new Color(22, 27, 34);
-                g2.setColor(bg);
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 10, 10));
-                g2.setColor(isHover ? new Color(56, 189, 248, 120) : new Color(48, 54, 61));
-                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 10, 10));
-                g2.dispose();
-            }
-        };
-        card.setOpaque(false);
-        card.setBorder(new EmptyBorder(16, 18, 16, 18));
-
-        // Category Tag
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        top.setOpaque(false);
-        JLabel catLabel = new JLabel(" " + category.toUpperCase() + " ");
-        catLabel.setFont(new Font("Segoe UI", Font.BOLD, 10));
-        catLabel.setForeground(new Color(56, 189, 248));
-        catLabel.setOpaque(true);
-        catLabel.setBackground(new Color(56, 189, 248, 20));
-        catLabel.setBorder(new EmptyBorder(2, 6, 2, 6));
-        top.add(catLabel);
-        card.add(top, BorderLayout.NORTH);
-
-        // Center Details
-        JPanel center = new JPanel();
-        center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
-        center.setOpaque(false);
-
-        JLabel titleLbl = new JLabel(title);
-        titleLbl.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        titleLbl.setForeground(Color.WHITE);
-        center.add(titleLbl);
-
-        center.add(Box.createRigidArea(new Dimension(0, 4)));
-
-        JLabel descLbl = new JLabel("<html>" + desc + "</html>");
-        descLbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-        descLbl.setForeground(new Color(148, 163, 184));
-        center.add(descLbl);
-
-        card.add(center, BorderLayout.CENTER);
-
-        return card;
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setContentAreaFilled(false);
+        btn.setPreferredSize(new Dimension(160, 36));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        if (url != null) {
+            btn.addActionListener(e -> {
+                try {
+                    Desktop.getDesktop().browse(URI.create(url));
+                } catch (Exception ignored) {}
+            });
+        }
+        return btn;
     }
 
     private JPanel createBottomLaunchBar() {
@@ -451,7 +424,7 @@ public class IceClientLauncher extends JFrame {
         launchBar.setPreferredSize(new Dimension(getWidth(), 72));
         launchBar.setBorder(new EmptyBorder(12, 24, 12, 24));
 
-        // Left Version Selector Pill (Authentic Lunar Style)
+        // Left Version Selector Pill
         Profile p = profileManager.getActiveProfile();
         String pName = p != null ? p.getName() : "Vanilla (1.21.1)";
         String pVer = p != null ? p.getMcVersion() : "1.21.1";
@@ -489,7 +462,7 @@ public class IceClientLauncher extends JFrame {
         });
         launchBar.add(versionSelectBtn, BorderLayout.WEST);
 
-        // Center Telemetry Info (Clean RAM & Engine Status)
+        // Center Telemetry Info
         JPanel centerInfo = new JPanel(new FlowLayout(FlowLayout.CENTER, 16, 12));
         centerInfo.setOpaque(false);
 
@@ -500,7 +473,7 @@ public class IceClientLauncher extends JFrame {
 
         launchBar.add(centerInfo, BorderLayout.CENTER);
 
-        // Right Lunar Launch Button
+        // Right Launch Button
         launchGameBtn = new JButton("LAUNCH MINECRAFT " + pVer) {
             @Override
             protected void paintComponent(Graphics g) {

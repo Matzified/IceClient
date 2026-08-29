@@ -151,13 +151,21 @@ public class IceClientGuiScreen extends Screen {
         int searchColor = searchQuery.isEmpty() ? 0xFF64748B : 0xFFFFFFFF;
         context.drawTextWithShadow(textRenderer, searchDisplay, searchX + 8, searchY + 9, searchColor);
 
+        // Texture Packs Store Button
+        int rpBtnW = 100;
+        int rpBtnX = x + w - rpBtnW - 165;
+        int rpBtnY = y + 12;
+        boolean rpBtnHover = mouseX >= rpBtnX && mouseX <= rpBtnX + rpBtnW && mouseY >= rpBtnY && mouseY <= rpBtnY + 26;
+        context.fill(rpBtnX, rpBtnY, rpBtnX + rpBtnW, rpBtnY + 26, rpBtnHover ? 0xFF059669 : 0xFF047857);
+        context.drawTextWithShadow(textRenderer, "🎨 Packs", rpBtnX + 24, rpBtnY + 9, 0xFFFFFFFF);
+
         // Edit HUD Layout Button
-        int btnW = 100;
+        int btnW = 95;
         int btnX = x + w - btnW - 55;
         int btnY = y + 12;
         boolean btnHover = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + 26;
         context.fill(btnX, btnY, btnX + btnW, btnY + 26, btnHover ? 0xFF0284C7 : 0xFF0369A1);
-        context.drawTextWithShadow(textRenderer, "🎯 Edit HUD", btnX + 16, btnY + 9, 0xFFFFFFFF);
+        context.drawTextWithShadow(textRenderer, "🎯 Edit HUD", btnX + 14, btnY + 9, 0xFFFFFFFF);
 
         // Close Button
         int closeX = x + w - 38;
@@ -283,8 +291,19 @@ public class IceClientGuiScreen extends Screen {
                 return true;
             }
 
+            // Texture Packs Button
+            int rpBtnW = 100;
+            int rpBtnX = contentX + contentW - rpBtnW - 165;
+            int rpBtnY = panelY + 12;
+            if (mouseX >= rpBtnX && mouseX <= rpBtnX + rpBtnW && mouseY >= rpBtnY && mouseY <= rpBtnY + 26) {
+                if (client != null) {
+                    client.setScreen(new TexturePackBrowserScreen(this));
+                }
+                return true;
+            }
+
             // Edit HUD Button
-            int btnW = 100;
+            int btnW = 95;
             int btnX = contentX + contentW - btnW - 55;
             int btnY = panelY + 12;
             if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + 26) {

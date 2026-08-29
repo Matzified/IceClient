@@ -36,11 +36,20 @@ public class HeldItemRendererMixin {
             int light,
             CallbackInfo ci
     ) {
+        OverlayModule module = OverlayModule.getInstance();
+        if (module == null) return;
+
         if (item.isOf(Items.SHIELD)) {
-            OverlayModule module = OverlayModule.getInstance();
-            if (module != null && module.isLowShieldActive()) {
+            if (module.isLowShieldActive()) {
                 double offset = module.getShieldOffset();
                 matrices.translate(0.0F, (float) -offset, 0.0F);
+            }
+        } else if (item.isOf(Items.TOTEM_OF_UNDYING)) {
+            if (module.isSmallTotemActive()) {
+                float scale = (float) module.getTotemScale();
+                double offset = module.getTotemOffset();
+                matrices.translate(0.0F, (float) -offset, 0.0F);
+                matrices.scale(scale, scale, scale);
             }
         }
     }
