@@ -7,7 +7,6 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.matzified.iceclient.gui.IceClientGuiScreen;
 import net.matzified.iceclient.hud.IceClientHud;
 import net.matzified.iceclient.module.ModuleManager;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.lwjgl.glfw.GLFW;

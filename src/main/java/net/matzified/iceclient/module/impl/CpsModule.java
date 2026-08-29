@@ -2,6 +2,7 @@ package net.matzified.iceclient.module.impl;
 
 import net.matzified.iceclient.module.Category;
 import net.matzified.iceclient.module.Module;
+import net.matzified.iceclient.setting.BooleanSetting;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
@@ -14,23 +15,32 @@ public class CpsModule extends Module {
     private static final List<Long> leftClicks = new ArrayList<>();
     private static final List<Long> rightClicks = new ArrayList<>();
 
+    public final BooleanSetting showLmb = new BooleanSetting("showLmb", "Show Left Clicks (LMB)", "Track left mouse click rate", true);
+    public final BooleanSetting showRmb = new BooleanSetting("showRmb", "Show Right Clicks (RMB)", "Track right mouse click rate", true);
+
     public CpsModule() {
-        super("cps", "CPS Counter", "Displays Left & Right click CPS speed", Category.PVP, true, 8, 30);
+        super("cps", "CPS Counter", "Displays Left & Right Mouse Clicks Per Second", Category.HUD, true, 8, 32);
+        addSetting(showLmb);
+        addSetting(showRmb);
     }
 
     public static void registerClick(int button) {
+        registerClick(button == 1);
+    }
+
+    public static void registerClick(boolean rightClick) {
         long now = System.currentTimeMillis();
-        if (button == 0) {
-            leftClicks.add(now);
-        } else if (button == 1) {
+        if (rightClick) {
             rightClicks.add(now);
+        } else {
+            leftClicks.add(now);
         }
     }
 
-    private int getCps(List<Long> clicks) {
+    private static int getCps(List<Long> list) {
         long now = System.currentTimeMillis();
-        clicks.removeIf(time -> now - time > 1000);
-        return clicks.size();
+        list.removeIf(time -> now - time > 1000);
+        return list.size();
     }
 
     @Override
@@ -38,9 +48,19 @@ public class CpsModule extends Module {
         if (mc.textRenderer == null) return;
         TextRenderer font = mc.textRenderer;
 
-        int lCps = getCps(leftClicks);
-        int rCps = getCps(rightClicks);
-        String text = "⚔ CPS: " + lCps + " | " + rCps;
+        int lmb = getCps(leftClicks);
+        int rmb = getCps(rightClicks);
+
+        String text;
+        if (showLmb.getValue() && showRmb.getValue()) {
+            text = "CPS: " + lmb + " | " + rmb;
+        } else if (showLmb.getValue()) {
+            text = "LMB: " + lmb + " CPS";
+        } else if (showRmb.getValue()) {
+            text = "RMB: " + rmb + " CPS";
+        } else {
+            text = lmb + " CPS";
+        }
 
         int padding = 6;
         int w = font.getWidth(text) + (padding * 2);
@@ -49,6 +69,6 @@ public class CpsModule extends Module {
         setHeight(h);
 
         drawGlassBox(context, getX(), getY(), w, h);
-        context.drawTextWithShadow(font, text, getX() + padding, getY() + 5, 0xFF38BDF8);
+        context.drawTextWithShadow(font, text, getX() + padding, getY() + 5, getTextColor());
     }
 }

@@ -22,7 +22,7 @@ public class AutoUpdater {
     public static void checkForUpdatesAsync(JFrame parentFrame) {
         new Thread(() -> {
             try {
-                URL url = new URL(VERSION_URL);
+                URL url = java.net.URI.create(VERSION_URL).toURL();
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setConnectTimeout(5000);
                 conn.setReadTimeout(5000);
@@ -83,7 +83,7 @@ public class AutoUpdater {
     private static void downloadAndApplyUpdate(JFrame parentFrame, String downloadUrl) {
         new Thread(() -> {
             try {
-                URL url = new URL(downloadUrl);
+                URL url = java.net.URI.create(downloadUrl).toURL();
                 File currentJar = new File(AutoUpdater.class.getProtectionDomain().getCodeSource().getLocation().toURI());
                 File tempNewJar = new File(currentJar.getParentFile(), "IceClientLauncher_new.jar");
 

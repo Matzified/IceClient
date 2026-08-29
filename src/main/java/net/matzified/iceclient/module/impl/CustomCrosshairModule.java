@@ -2,14 +2,22 @@ package net.matzified.iceclient.module.impl;
 
 import net.matzified.iceclient.module.Category;
 import net.matzified.iceclient.module.Module;
-import net.minecraft.client.font.TextRenderer;
+import net.matzified.iceclient.setting.BooleanSetting;
+import net.matzified.iceclient.setting.NumberSetting;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
 
 public class CustomCrosshairModule extends Module {
 
+    public final NumberSetting crosshairSize = new NumberSetting("size", "Crosshair Size", "Length of crosshair arms", 4.0, 1.0, 12.0, 1.0);
+    public final NumberSetting crosshairGap = new NumberSetting("gap", "Center Gap", "Center gap distance", 2.0, 0.0, 8.0, 1.0);
+    public final BooleanSetting showDot = new BooleanSetting("showDot", "Center Dot", "Render center pixel dot", true);
+
     public CustomCrosshairModule() {
         super("custom_crosshair", "Custom Crosshair", "Renders a custom PvP crosshair with dynamic target coloring", Category.VISUAL, false, 8, 965);
+        addSetting(crosshairSize);
+        addSetting(crosshairGap);
+        addSetting(showDot);
     }
 
     @Override
@@ -19,10 +27,10 @@ public class CustomCrosshairModule extends Module {
         int cx = mc.getWindow().getScaledWidth() / 2;
         int cy = mc.getWindow().getScaledHeight() / 2;
 
-        int size = 4;
-        int gap = 2;
+        int size = crosshairSize.getValue().intValue();
+        int gap = crosshairGap.getValue().intValue();
         int thickness = 1;
-        int color = 0xFF38BDF8; // Ice Cyan Crosshair
+        int color = getTextColor();
 
         // Draw crosshair lines around center
         context.fill(cx - size - gap, cy - thickness / 2, cx - gap, cy + thickness / 2 + 1, color);
@@ -31,6 +39,8 @@ public class CustomCrosshairModule extends Module {
         context.fill(cx - thickness / 2, cy + gap + 1, cx + thickness / 2 + 1, cy + size + gap + 1, color);
 
         // Center dot
-        context.fill(cx, cy, cx + 1, cy + 1, 0xFFFFFFFF);
+        if (showDot.getValue()) {
+            context.fill(cx, cy, cx + 1, cy + 1, 0xFFFFFFFF);
+        }
     }
 }

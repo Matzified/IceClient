@@ -250,6 +250,7 @@ public class CreateProfileDialog extends JDialog {
             JOptionPane.showMessageDialog(this, "Modpack '" + p.getName() + "' imported successfully into dedicated isolated folder!", "Modpack Imported", JOptionPane.INFORMATION_MESSAGE);
             dispose();
             if (onProfileCreated != null) onProfileCreated.run();
+            if (tabSwitchCallback != null) tabSwitchCallback.switchToTab(0);
         } else {
             JOptionPane.showMessageDialog(this, "Failed to import modpack. Please check file format.", "Import Error", JOptionPane.ERROR_MESSAGE);
         }

@@ -140,7 +140,7 @@ public class ModpackImporter {
 
     private static void downloadFile(String urlStr, File targetFile) {
         try {
-            URL url = new URL(urlStr);
+            URL url = java.net.URI.create(urlStr).toURL();
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestProperty("User-Agent", "IceClientLauncher/1.0.0");
             try (InputStream in = conn.getInputStream()) {

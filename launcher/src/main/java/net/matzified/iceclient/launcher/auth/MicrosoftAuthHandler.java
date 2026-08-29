@@ -38,7 +38,7 @@ public class MicrosoftAuthHandler {
                         "&grant_type=authorization_code" +
                         "&redirect_uri=" + REDIRECT_URI;
 
-                URL url = new URL(tokenUrl);
+                URL url = java.net.URI.create(tokenUrl).toURL();
                 HttpURLConnection conn = (HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("POST");
                 conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");

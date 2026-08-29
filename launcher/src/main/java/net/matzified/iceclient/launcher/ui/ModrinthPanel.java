@@ -37,63 +37,76 @@ public class ModrinthPanel extends JPanel {
     private JPanel resultsPanel;
     private final Map<String, ImageIcon> iconCache = new HashMap<>();
 
-    private JButton[] filterTabs;
-
     public ModrinthPanel() {
-        setLayout(new BorderLayout(18, 18));
-        setBackground(new Color(13, 15, 20));
-        setBorder(new EmptyBorder(22, 28, 22, 28));
+        setLayout(new BorderLayout(16, 16));
+        setBackground(new Color(11, 14, 20));
+        setBorder(new EmptyBorder(20, 24, 20, 24));
 
+        // 1. Top Header Bar (Branding, Target Profile Pill, Search Bar & Tabs)
         JPanel topHeader = new JPanel();
         topHeader.setLayout(new BoxLayout(topHeader, BoxLayout.Y_AXIS));
         topHeader.setOpaque(false);
 
-        // Title & Target Profile Row
+        // Title Row
         JPanel titleRow = new JPanel(new BorderLayout(14, 0));
         titleRow.setOpaque(false);
 
-        FrozenLabel titleLabel = new FrozenLabel("MOD STORE", 22);
+        JPanel brandWrapper = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        brandWrapper.setOpaque(false);
 
+        FrozenLabel titleLabel = new FrozenLabel("MOD STORE", 22);
+        brandWrapper.add(titleLabel);
+
+        JLabel subLabel = new JLabel("Powered by Modrinth • High-Performance Verified");
+        subLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        subLabel.setForeground(new Color(100, 116, 139));
+        brandWrapper.add(subLabel);
+
+        titleRow.add(brandWrapper, BorderLayout.WEST);
+
+        // Target Profile Badge
         Profile activeProfile = ProfileManager.getInstance().getActiveProfile();
         String profileName = activeProfile != null ? activeProfile.getName() : "Vanilla (1.21.1)";
-        JLabel targetPill = new JLabel(" Target: " + profileName + " ");
+        String mcVer = activeProfile != null ? activeProfile.getMcVersion() : "1.21.1";
+
+        JLabel targetPill = new JLabel(" 🎯 Active: " + profileName + " (" + mcVer + ") ");
         targetPill.setFont(new Font("Segoe UI", Font.BOLD, 12));
         targetPill.setForeground(new Color(56, 189, 248));
         targetPill.setOpaque(true);
-        targetPill.setBackground(new Color(24, 32, 48));
+        targetPill.setBackground(new Color(18, 24, 38));
         targetPill.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(56, 189, 248, 100), 1),
-                new EmptyBorder(4, 10, 4, 10)
+                BorderFactory.createLineBorder(new Color(56, 189, 248, 80), 1),
+                new EmptyBorder(5, 12, 5, 12)
         ));
 
-        titleRow.add(titleLabel, BorderLayout.WEST);
         titleRow.add(targetPill, BorderLayout.EAST);
         topHeader.add(titleRow);
 
-        topHeader.add(Box.createRigidArea(new Dimension(0, 16)));
+        topHeader.add(Box.createRigidArea(new Dimension(0, 14)));
 
-        // Filter Tabs & Search Bar Container
-        JPanel filterRow = new JPanel(new BorderLayout(14, 0));
-        filterRow.setOpaque(false);
+        // Navigation Tabs & Search Box
+        JPanel navRow = new JPanel(new BorderLayout(14, 0));
+        navRow.setOpaque(false);
 
-        // Filter Toggle Tabs
-        JPanel tabsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        JPanel tabsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         tabsPanel.setOpaque(false);
 
         ProjectType[] types = {ProjectType.MODS, ProjectType.RESOURCEPACKS, ProjectType.DATAPACKS, ProjectType.SHADERS};
-        filterTabs = new JButton[types.length];
 
-        for (int i = 0; i < types.length; i++) {
-            final ProjectType pt = types[i];
+        for (ProjectType pt : types) {
             JButton tab = new JButton(pt.displayName) {
                 @Override
                 protected void paintComponent(Graphics g) {
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                     boolean isSelected = (currentType == pt);
-                    Color bg = isSelected ? new Color(14, 165, 233) : (getModel().isRollover() ? new Color(34, 40, 54) : new Color(22, 26, 36));
+                    Color bg = isSelected ? new Color(2, 132, 199) : (getModel().isRollover() ? new Color(28, 34, 48) : new Color(18, 22, 32));
                     g2.setColor(bg);
-                    g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 12, 12));
+                    g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 10, 10));
+                    if (isSelected) {
+                        g2.setColor(new Color(56, 189, 248));
+                        g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 10, 10));
+                    }
                     g2.dispose();
                     super.paintComponent(g);
                 }
@@ -110,10 +123,9 @@ public class ModrinthPanel extends JPanel {
                 repaint();
                 performSearch(searchField.getText());
             });
-            filterTabs[i] = tab;
             tabsPanel.add(tab);
         }
-        filterRow.add(tabsPanel, BorderLayout.WEST);
+        navRow.add(tabsPanel, BorderLayout.WEST);
 
         // Search Field Box
         JPanel searchBox = new JPanel(new BorderLayout(8, 0)) {
@@ -121,15 +133,15 @@ public class ModrinthPanel extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(22, 26, 36));
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 12, 12));
+                g2.setColor(new Color(18, 24, 36));
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 10, 10));
                 g2.setColor(new Color(56, 189, 248, 80));
-                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 12, 12));
+                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 10, 10));
                 g2.dispose();
             }
         };
         searchBox.setOpaque(false);
-        searchBox.setPreferredSize(new Dimension(280, 36));
+        searchBox.setPreferredSize(new Dimension(300, 36));
         searchBox.setBorder(new EmptyBorder(0, 12, 0, 12));
 
         JLabel searchIcon = new JLabel("🔍");
@@ -145,12 +157,12 @@ public class ModrinthPanel extends JPanel {
         searchField.addActionListener(e -> performSearch(searchField.getText()));
         searchBox.add(searchField, BorderLayout.CENTER);
 
-        filterRow.add(searchBox, BorderLayout.EAST);
-        topHeader.add(filterRow);
+        navRow.add(searchBox, BorderLayout.EAST);
+        topHeader.add(navRow);
 
         add(topHeader, BorderLayout.NORTH);
 
-        // Results Grid
+        // 2. Results Grid Panel
         resultsPanel = new JPanel();
         resultsPanel.setLayout(new GridLayout(0, 2, 14, 14));
         resultsPanel.setOpaque(false);
@@ -159,11 +171,10 @@ public class ModrinthPanel extends JPanel {
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
         scrollPane.setBorder(null);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(18);
 
         add(scrollPane, BorderLayout.CENTER);
 
-        // Initial Popular Search
         SwingUtilities.invokeLater(() -> performSearch(""));
     }
 
@@ -171,7 +182,7 @@ public class ModrinthPanel extends JPanel {
         resultsPanel.removeAll();
         resultsPanel.setLayout(new BorderLayout());
 
-        JLabel loadingLabel = new JLabel("Searching Modrinth for compatible assets...", SwingConstants.CENTER);
+        JLabel loadingLabel = new JLabel("Fetching compatible assets from Modrinth...", SwingConstants.CENTER);
         loadingLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         loadingLabel.setForeground(new Color(148, 163, 184));
         resultsPanel.add(loadingLabel, BorderLayout.CENTER);
@@ -194,7 +205,7 @@ public class ModrinthPanel extends JPanel {
                     resultsPanel.setLayout(new GridLayout(0, 2, 14, 14));
 
                     if (list.isEmpty()) {
-                        JLabel emptyLabel = new JLabel("No matching assets found on Modrinth.", SwingConstants.CENTER);
+                        JLabel emptyLabel = new JLabel("No matching assets found for this category.", SwingConstants.CENTER);
                         emptyLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
                         emptyLabel.setForeground(new Color(148, 163, 184));
                         resultsPanel.setLayout(new BorderLayout());
@@ -229,20 +240,20 @@ public class ModrinthPanel extends JPanel {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(isHover ? new Color(28, 34, 48) : new Color(18, 22, 32));
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 14, 14));
-                g2.setColor(isHover ? new Color(56, 189, 248, 140) : new Color(255, 255, 255, 20));
-                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 14, 14));
+                g2.setColor(isHover ? new Color(24, 30, 44) : new Color(16, 20, 30));
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 12, 12));
+                g2.setColor(isHover ? new Color(56, 189, 248, 120) : new Color(255, 255, 255, 15));
+                g2.draw(new RoundRectangle2D.Float(0, 0, getWidth() - 1, getHeight() - 1, 12, 12));
                 g2.dispose();
             }
         };
         card.setOpaque(false);
-        card.setBorder(new EmptyBorder(14, 14, 14, 14));
+        card.setBorder(new EmptyBorder(12, 14, 12, 14));
         card.setPreferredSize(new Dimension(340, 96));
 
         // Left Icon
         JLabel iconLabel = new JLabel();
-        iconLabel.setPreferredSize(new Dimension(54, 54));
+        iconLabel.setPreferredSize(new Dimension(52, 52));
         iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
         loadIconAsync(item.iconUrl, iconLabel);
         card.add(iconLabel, BorderLayout.WEST);
@@ -259,8 +270,8 @@ public class ModrinthPanel extends JPanel {
 
         center.add(Box.createRigidArea(new Dimension(0, 3)));
 
-        String desc = item.description.length() > 60 ? item.description.substring(0, 57) + "..." : item.description;
-        JLabel descLbl = new JLabel(desc.isEmpty() ? "No description provided." : desc);
+        String desc = item.description.length() > 62 ? item.description.substring(0, 59) + "..." : item.description;
+        JLabel descLbl = new JLabel(desc.isEmpty() ? "Verified high-performance mod." : desc);
         descLbl.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         descLbl.setForeground(new Color(148, 163, 184));
         center.add(descLbl);
@@ -282,7 +293,7 @@ public class ModrinthPanel extends JPanel {
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 Color bg = item.isInstalled ? new Color(16, 185, 129) : (getModel().isRollover() ? new Color(2, 132, 199) : new Color(3, 105, 161));
                 g2.setColor(bg);
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 10, 10));
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 8, 8));
                 g2.dispose();
                 super.paintComponent(g);
             }
@@ -363,7 +374,7 @@ public class ModrinthPanel extends JPanel {
         Graphics2D g2 = img.createGraphics();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setColor(new Color(24, 32, 48));
-        g2.fillRoundRect(0, 0, 48, 48, 12, 12);
+        g2.fillRoundRect(0, 0, 48, 48, 10, 10);
         g2.setColor(new Color(56, 189, 248));
         g2.setFont(new Font("Segoe UI", Font.BOLD, 20));
         FontMetrics fm = g2.getFontMetrics();

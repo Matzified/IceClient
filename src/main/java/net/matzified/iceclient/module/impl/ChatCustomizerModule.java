@@ -2,7 +2,6 @@ package net.matzified.iceclient.module.impl;
 
 import net.matzified.iceclient.module.Category;
 import net.matzified.iceclient.module.Module;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderTickCounter;
 

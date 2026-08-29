@@ -21,10 +21,10 @@ public class IceClientGuiScreen extends Screen {
     private int scrollOffset = 0;
     private int maxScroll = 0;
 
-    // Smooth GUI Open Animation
+    // Smooth open animation easing
     private final long openTime = System.currentTimeMillis();
 
-    // Smooth Toggle Switch Animations per module (interpolated 0.0f to 1.0f)
+    // Per-module toggle switch animation interpolation (0.0f -> 1.0f)
     private final Map<String, Float> switchAnimMap = new HashMap<>();
 
     public IceClientGuiScreen() {
@@ -38,106 +38,136 @@ public class IceClientGuiScreen extends Screen {
 
     private float getEaseProgress() {
         long elapsed = System.currentTimeMillis() - openTime;
-        float t = Math.min(1.0f, elapsed / 220.0f);
-        return 1.0f - (float) Math.pow(1.0f - t, 3); // easeOutCubic
+        float t = Math.min(1.0f, elapsed / 200.0f);
+        return 1.0f - (float) Math.pow(1.0f - t, 3); // cubic easeOut
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         float ease = getEaseProgress();
 
-        // Dark frosted translucent background with fade-in
-        int bgAlpha = (int) (0xD0 * ease);
-        context.fill(0, 0, width, height, (bgAlpha << 24) | 0x0A0D14);
+        // 1. Frosted Backdrop
+        int bgAlpha = (int) (0xDA * ease);
+        context.fill(0, 0, width, height, (bgAlpha << 24) | 0x07090E);
 
-        int panelW = Math.min(840, width - 40);
-        int panelH = Math.min(540, height - 40);
+        int panelW = Math.min(920, width - 40);
+        int panelH = Math.min(560, height - 40);
 
-        // Smooth scale-up and slide-in effect
-        int animatedH = (int) (panelH * (0.92f + 0.08f * ease));
+        int animatedH = (int) (panelH * (0.94f + 0.06f * ease));
         int panelX = (width - panelW) / 2;
         int panelY = (height - animatedH) / 2;
 
-        // Main Glass Panel Container
-        context.fill(panelX, panelY, panelX + panelW, panelY + animatedH, 0xEE111622);
-        // Outer Cyan Glow Border with smooth dynamic brightness
+        // 2. Main Window Container (Sleek Glassmorphic Dark Panel)
+        context.fill(panelX, panelY, panelX + panelW, panelY + animatedH, 0xF00D111A);
+        
+        // Neon Ice Cyan Accent Border
         context.fill(panelX, panelY, panelX + panelW, panelY + 2, 0xFF38BDF8);
-        context.fill(panelX, panelY + animatedH - 2, panelX + panelW, panelY + animatedH, 0x3338BDF8);
-        context.fill(panelX, panelY, panelX + 2, panelY + animatedH, 0x3338BDF8);
-        context.fill(panelX + panelW - 2, panelY, panelX + panelW, panelY + animatedH, 0x3338BDF8);
+        context.fill(panelX, panelY + animatedH - 1, panelX + panelW, panelY + animatedH, 0x2238BDF8);
+        context.fill(panelX, panelY, panelX + 1, panelY + animatedH, 0x2238BDF8);
+        context.fill(panelX + panelW - 1, panelY, panelX + panelW, panelY + animatedH, 0x2238BDF8);
 
-        // Header
-        renderHeader(context, panelX, panelY, panelW, mouseX, mouseY);
+        // Sidebar Width
+        int sidebarW = 180;
 
-        // Category Tabs Bar
-        renderCategoryTabs(context, panelX, panelY + 48, panelW, mouseX, mouseY);
+        // 3. Render Sidebar (Brand & Category Navigation)
+        renderSidebar(context, panelX, panelY, sidebarW, animatedH, mouseX, mouseY);
 
-        // Modules Grid
-        renderModulesGrid(context, panelX + 20, panelY + 95, panelW - 40, animatedH - 110, mouseX, mouseY);
+        // 4. Render Main Content Header
+        int contentX = panelX + sidebarW;
+        int contentW = panelW - sidebarW;
+        renderContentHeader(context, contentX, panelY, contentW, mouseX, mouseY);
+
+        // 5. Render Module Grid
+        int gridY = panelY + 54;
+        int gridH = animatedH - 64;
+        renderModulesGrid(context, contentX + 16, gridY, contentW - 32, gridH, mouseX, mouseY);
 
         super.render(context, mouseX, mouseY, delta);
     }
 
-    private void renderHeader(DrawContext context, int x, int y, int w, int mouseX, int mouseY) {
-        // Title
-        context.drawTextWithShadow(textRenderer, "🧊 ICE CLIENT", x + 20, y + 18, 0xFF38BDF8);
-        context.drawTextWithShadow(textRenderer, "MOD MENU", x + 106, y + 18, 0xFF94A3B8);
+    private void renderSidebar(DrawContext context, int x, int y, int w, int h, int mouseX, int mouseY) {
+        // Sidebar Background
+        context.fill(x, y, x + w, y + h, 0xF50A0D14);
+        context.fill(x + w - 1, y, x + w, y + h, 0x1A38BDF8);
 
-        // Search Bar Box
-        int searchW = 180;
-        int searchX = x + w - searchW - 200;
-        int searchY = y + 12;
-        context.fill(searchX, searchY, searchX + searchW, searchY + 24, 0xFF182030);
-        context.fill(searchX, searchY, searchX + searchW, searchY + 1, 0x5538BDF8);
-        context.fill(searchX, searchY + 23, searchX + searchW, searchY + 24, 0x5538BDF8);
-        String searchDisplay = searchQuery.isEmpty() ? "🔍 Search modules..." : "🔍 " + searchQuery;
-        int searchColor = searchQuery.isEmpty() ? 0xFF64748B : 0xFFFFFFFF;
-        context.drawTextWithShadow(textRenderer, searchDisplay, searchX + 8, searchY + 8, searchColor);
+        // Ice Client Logo & Branding
+        context.drawTextWithShadow(textRenderer, "🧊 ICE CLIENT", x + 16, y + 16, 0xFF38BDF8);
+        context.drawTextWithShadow(textRenderer, "1000 FPS COMPETITIVE", x + 16, y + 28, 0xFF64748B);
 
-        // Edit HUD Layout Button
-        int btnW = 110;
-        int btnX = x + w - btnW - 75;
-        int btnY = y + 12;
-        boolean btnHover = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + 24;
-        context.fill(btnX, btnY, btnX + btnW, btnY + 24, btnHover ? 0xFF0284C7 : 0xFF0369A1);
-        context.drawTextWithShadow(textRenderer, "🎯 Edit HUD", btnX + 22, btnY + 8, 0xFFFFFFFF);
+        context.fill(x + 12, y + 42, x + w - 12, y + 43, 0x1A38BDF8);
 
-        // Close Button
-        int closeX = x + w - 45;
-        int closeY = y + 12;
-        boolean closeHover = mouseX >= closeX && mouseX <= closeX + 26 && mouseY >= closeY && mouseY <= closeY + 24;
-        context.fill(closeX, closeY, closeX + 26, closeY + 24, closeHover ? 0xFFDC2626 : 0xFF222B3D);
-        context.drawTextWithShadow(textRenderer, "✕", closeX + 9, closeY + 8, 0xFFFFFFFF);
-
-        // Header Separator Line
-        context.fill(x, y + 46, x + w, y + 47, 0x2238BDF8);
-    }
-
-    private void renderCategoryTabs(DrawContext context, int x, int y, int w, int mouseX, int mouseY) {
-        int tabX = x + 20;
+        // Category Navigation List
+        int catY = y + 52;
         Category[] categories = Category.values();
 
         for (Category cat : categories) {
-            String label = cat.icon + " " + cat.displayName;
-            int tabW = textRenderer.getWidth(label) + 18;
-            boolean isSelected = cat == currentCategory;
-            boolean isHover = mouseX >= tabX && mouseX <= tabX + tabW && mouseY >= y + 4 && mouseY <= y + 32;
+            boolean isSelected = (cat == currentCategory);
+            boolean isHover = mouseX >= x + 8 && mouseX <= x + w - 8 && mouseY >= catY && mouseY <= catY + 30;
+
+            int count = (int) moduleManager.getModulesByCategory(cat).size();
 
             if (isSelected) {
-                context.fill(tabX, y + 6, tabX + tabW, y + 30, 0x3338BDF8);
-                context.fill(tabX, y + 30, tabX + tabW, y + 32, 0xFF38BDF8);
-                context.drawTextWithShadow(textRenderer, label, tabX + 9, y + 14, 0xFF38BDF8);
+                // Active Pill
+                context.fill(x + 8, catY, x + w - 8, catY + 30, 0x2638BDF8);
+                context.fill(x + 8, catY + 4, x + 11, catY + 26, 0xFF38BDF8);
+                context.drawTextWithShadow(textRenderer, cat.icon + "  " + cat.displayName, x + 18, catY + 11, 0xFF38BDF8);
             } else {
+                if (isHover) {
+                    context.fill(x + 8, catY, x + w - 8, catY + 30, 0x10FFFFFF);
+                }
                 int col = isHover ? 0xFFFFFFFF : 0xFF94A3B8;
-                if (isHover) context.fill(tabX, y + 6, tabX + tabW, y + 30, 0x15FFFFFF);
-                context.drawTextWithShadow(textRenderer, label, tabX + 9, y + 14, col);
+                context.drawTextWithShadow(textRenderer, cat.icon + "  " + cat.displayName, x + 18, catY + 11, col);
             }
 
-            tabX += tabW + 8;
+            // Count Badge
+            String countStr = String.valueOf(count);
+            int badgeW = textRenderer.getWidth(countStr) + 8;
+            int badgeX = x + w - badgeW - 14;
+            context.fill(badgeX, catY + 8, badgeX + badgeW, catY + 22, isSelected ? 0x4438BDF8 : 0x1A334155);
+            context.drawTextWithShadow(textRenderer, countStr, badgeX + 4, catY + 11, isSelected ? 0xFF38BDF8 : 0xFF64748B);
+
+            catY += 34;
         }
 
-        // Tabs separator line
-        context.fill(x, y + 38, x + w, y + 39, 0x2238BDF8);
+        // Footer Version Tag
+        context.drawTextWithShadow(textRenderer, "v1.0.0 • Fabric 1.21.1", x + 16, y + h - 18, 0xFF475569);
+    }
+
+    private void renderContentHeader(DrawContext context, int x, int y, int w, int mouseX, int mouseY) {
+        // Active Category Title
+        String catTitle = currentCategory.displayName.toUpperCase() + " MODULES";
+        context.drawTextWithShadow(textRenderer, catTitle, x + 18, y + 18, 0xFFF1F5F9);
+
+        // Search Bar Box
+        int searchW = 190;
+        int searchX = x + w - searchW - 170;
+        int searchY = y + 12;
+
+        context.fill(searchX, searchY, searchX + searchW, searchY + 26, 0xFF141A26);
+        context.fill(searchX, searchY, searchX + searchW, searchY + 1, 0x3338BDF8);
+        context.fill(searchX, searchY + 25, searchX + searchW, searchY + 26, 0x3338BDF8);
+
+        String searchDisplay = searchQuery.isEmpty() ? "🔍 Search modules..." : "🔍 " + searchQuery;
+        int searchColor = searchQuery.isEmpty() ? 0xFF64748B : 0xFFFFFFFF;
+        context.drawTextWithShadow(textRenderer, searchDisplay, searchX + 8, searchY + 9, searchColor);
+
+        // Edit HUD Layout Button
+        int btnW = 100;
+        int btnX = x + w - btnW - 55;
+        int btnY = y + 12;
+        boolean btnHover = mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + 26;
+        context.fill(btnX, btnY, btnX + btnW, btnY + 26, btnHover ? 0xFF0284C7 : 0xFF0369A1);
+        context.drawTextWithShadow(textRenderer, "🎯 Edit HUD", btnX + 16, btnY + 9, 0xFFFFFFFF);
+
+        // Close Button
+        int closeX = x + w - 38;
+        int closeY = y + 12;
+        boolean closeHover = mouseX >= closeX && mouseX <= closeX + 26 && mouseY >= closeY && mouseY <= closeY + 26;
+        context.fill(closeX, closeY, closeX + 26, closeY + 26, closeHover ? 0xFFDC2626 : 0xFF1E293B);
+        context.drawTextWithShadow(textRenderer, "✕", closeX + 9, closeY + 9, 0xFFFFFFFF);
+
+        // Header Separator Line
+        context.fill(x, y + 46, x + w, y + 47, 0x1A38BDF8);
     }
 
     private void renderModulesGrid(DrawContext context, int x, int y, int w, int h, int mouseX, int mouseY) {
@@ -148,16 +178,15 @@ public class IceClientGuiScreen extends Screen {
                 .collect(Collectors.toList());
 
         int cols = 2;
-        int gap = 14;
+        int gap = 12;
         int cardW = (w - (gap * (cols - 1))) / cols;
-        int cardH = 68;
+        int cardH = 64;
 
         int totalRows = (int) Math.ceil(list.size() / (double) cols);
         int totalContentH = totalRows * (cardH + gap);
         maxScroll = Math.max(0, totalContentH - h);
         scrollOffset = Math.max(0, Math.min(scrollOffset, maxScroll));
 
-        // Enable Scissor for smooth scrolling area
         context.enableScissor(x, y, x + w, y + h);
 
         for (int i = 0; i < list.size(); i++) {
@@ -172,70 +201,59 @@ public class IceClientGuiScreen extends Screen {
 
             boolean isHover = mouseX >= cx && mouseX <= cx + cardW && mouseY >= cy && mouseY <= cy + cardH;
 
-            // Card Background with smooth hover lighting
-            int bgCol = isHover ? 0xFF1E2638 : 0xFF141926;
+            // Card Container
+            int bgCol = isHover ? 0xFF161D2B : 0xFF111722;
             context.fill(cx, cy, cx + cardW, cy + cardH, bgCol);
 
             // Card Border
-            int borderCol = m.isEnabled() ? 0x9938BDF8 : (isHover ? 0x4438BDF8 : 0x2238BDF8);
+            int borderCol = m.isEnabled() ? 0x6638BDF8 : (isHover ? 0x3338BDF8 : 0x1538BDF8);
             context.fill(cx, cy, cx + cardW, cy + 1, borderCol);
             context.fill(cx, cy + cardH - 1, cx + cardW, cy + cardH, borderCol);
             context.fill(cx, cy, cx + 1, cy + cardH, borderCol);
             context.fill(cx + cardW - 1, cy, cx + cardW, cy + cardH, borderCol);
 
-            // Left status indicator bar
+            // Left Enabled Indicator Bar
             if (m.isEnabled()) {
                 context.fill(cx, cy, cx + 3, cy + cardH, 0xFF38BDF8);
             }
 
-            // Title & Category Badge
-            context.drawTextWithShadow(textRenderer, m.getName(), cx + 12, cy + 12, 0xFFFFFFFF);
-
-            // Category Pill
-            String catName = m.getCategory().displayName;
-            int catW = textRenderer.getWidth(catName) + 8;
-            int catX = cx + cardW - catW - 90;
-            context.fill(catX, cy + 10, catX + catW, cy + 22, 0xFF1E293B);
-            context.drawTextWithShadow(textRenderer, catName, catX + 4, cy + 12, 0xFF94A3B8);
+            // Title
+            context.drawTextWithShadow(textRenderer, m.getName(), cx + 12, cy + 11, m.isEnabled() ? 0xFFFFFFFF : 0xFFCBD5E1);
 
             // Description
             String desc = m.getDescription();
-            if (textRenderer.getWidth(desc) > cardW - 100) {
-                desc = textRenderer.trimToWidth(desc, cardW - 110) + "...";
+            if (textRenderer.getWidth(desc) > cardW - 105) {
+                desc = textRenderer.trimToWidth(desc, cardW - 115) + "...";
             }
-            context.drawTextWithShadow(textRenderer, desc, cx + 12, cy + 30, 0xFF94A3B8);
+            context.drawTextWithShadow(textRenderer, desc, cx + 12, cy + 26, 0xFF64748B);
 
-            // Settings Gear Button
+            // Settings Button (⚙️)
             int gearW = 24;
             int gearH = 22;
-            int gearX = cx + cardW - 84;
+            int gearX = cx + cardW - 82;
             int gearY = cy + (cardH - gearH) / 2;
             boolean gearHover = mouseX >= gearX && mouseX <= gearX + gearW && mouseY >= gearY && mouseY <= gearY + gearH;
             context.fill(gearX, gearY, gearX + gearW, gearY + gearH, gearHover ? 0xFF0284C7 : 0xFF1E293B);
             context.drawTextWithShadow(textRenderer, "⚙️", gearX + 6, gearY + 7, 0xFFFFFFFF);
 
-            // Animated Toggle Switch Button (Interpolated 0.0 -> 1.0)
-            int switchW = 46;
+            // Animated iOS Toggle Switch
+            int switchW = 44;
             int switchH = 22;
             int switchX = cx + cardW - switchW - 10;
             int switchY = cy + (cardH - switchH) / 2;
 
             float targetVal = m.isEnabled() ? 1.0f : 0.0f;
             float currentVal = switchAnimMap.getOrDefault(m.getId(), targetVal);
-            currentVal += (targetVal - currentVal) * 0.25f; // Smooth glide easing
+            currentVal += (targetVal - currentVal) * 0.25f;
             switchAnimMap.put(m.getId(), currentVal);
 
-            int trackCol = m.isEnabled() ? 0xFF0284C7 : 0xFF334155;
+            int trackCol = m.isEnabled() ? 0xFF0284C7 : 0xFF242E42;
             context.fill(switchX, switchY, switchX + switchW, switchY + switchH, trackCol);
 
-            // Sliding Knob
             int knobW = 16;
             int knobX = switchX + 2 + (int) (currentVal * (switchW - knobW - 4));
             context.fill(knobX, switchY + 2, knobX + knobW, switchY + switchH - 2, 0xFFFFFFFF);
 
-            String statusText = m.isEnabled() ? "ON" : "OFF";
-            int textOffset = m.isEnabled() ? (switchX + 5) : (switchX + 24);
-            // Draw label
             if (currentVal > 0.6f) {
                 context.drawTextWithShadow(textRenderer, "ON", switchX + 5, switchY + 7, 0xFFFFFFFF);
             } else if (currentVal < 0.4f) {
@@ -249,49 +267,49 @@ public class IceClientGuiScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
-            int panelW = Math.min(840, width - 40);
-            int panelH = Math.min(540, height - 40);
+            int panelW = Math.min(920, width - 40);
+            int panelH = Math.min(560, height - 40);
             int panelX = (width - panelW) / 2;
             int panelY = (height - panelH) / 2;
+            int sidebarW = 180;
+            int contentX = panelX + sidebarW;
+            int contentW = panelW - sidebarW;
 
-            // Close button clicked
-            int closeX = panelX + panelW - 45;
+            // Close button
+            int closeX = contentX + contentW - 38;
             int closeY = panelY + 12;
-            if (mouseX >= closeX && mouseX <= closeX + 26 && mouseY >= closeY && mouseY <= closeY + 24) {
+            if (mouseX >= closeX && mouseX <= closeX + 26 && mouseY >= closeY && mouseY <= closeY + 26) {
                 close();
                 return true;
             }
 
-            // Edit HUD Button clicked
-            int btnW = 110;
-            int btnX = panelX + panelW - btnW - 75;
+            // Edit HUD Button
+            int btnW = 100;
+            int btnX = contentX + contentW - btnW - 55;
             int btnY = panelY + 12;
-            if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + 24) {
+            if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + 26) {
                 if (client != null) {
                     client.setScreen(new HudPositionerScreen(this));
                 }
                 return true;
             }
 
-            // Category Tab Clicked
-            int tabX = panelX + 20;
-            int tabY = panelY + 48;
+            // Sidebar Category Clicks
+            int catY = panelY + 52;
             for (Category cat : Category.values()) {
-                String label = cat.icon + " " + cat.displayName;
-                int tabW = textRenderer.getWidth(label) + 18;
-                if (mouseX >= tabX && mouseX <= tabX + tabW && mouseY >= tabY + 4 && mouseY <= tabY + 32) {
+                if (mouseX >= panelX + 8 && mouseX <= panelX + sidebarW - 8 && mouseY >= catY && mouseY <= catY + 30) {
                     currentCategory = cat;
                     scrollOffset = 0;
                     return true;
                 }
-                tabX += tabW + 8;
+                catY += 34;
             }
 
-            // Check Module Card Click
-            int gridX = panelX + 20;
-            int gridY = panelY + 95;
-            int gridW = panelW - 40;
-            int gridH = panelH - 110;
+            // Grid Module Clicks
+            int gridX = contentX + 16;
+            int gridY = panelY + 54;
+            int gridW = contentW - 32;
+            int gridH = panelH - 64;
 
             if (mouseX >= gridX && mouseX <= gridX + gridW && mouseY >= gridY && mouseY <= gridY + gridH) {
                 List<Module> list = moduleManager.getModulesByCategory(currentCategory).stream()
@@ -301,9 +319,9 @@ public class IceClientGuiScreen extends Screen {
                         .collect(Collectors.toList());
 
                 int cols = 2;
-                int gap = 14;
+                int gap = 12;
                 int cardW = (gridW - (gap * (cols - 1))) / cols;
-                int cardH = 68;
+                int cardH = 64;
 
                 for (int i = 0; i < list.size(); i++) {
                     int row = i / cols;
@@ -314,10 +332,10 @@ public class IceClientGuiScreen extends Screen {
                     if (mouseX >= cx && mouseX <= cx + cardW && mouseY >= cy && mouseY <= cy + cardH) {
                         Module m = list.get(i);
 
-                        // Check if Gear / Settings button clicked
+                        // Settings Gear Click
                         int gearW = 24;
                         int gearH = 22;
-                        int gearX = cx + cardW - 84;
+                        int gearX = cx + cardW - 82;
                         int gearY = cy + (cardH - gearH) / 2;
                         if (mouseX >= gearX && mouseX <= gearX + gearW && mouseY >= gearY && mouseY <= gearY + gearH) {
                             if (client != null) {
@@ -326,7 +344,7 @@ public class IceClientGuiScreen extends Screen {
                             return true;
                         }
 
-                        // Otherwise toggle the module
+                        // Toggle Module
                         m.toggle();
                         moduleManager.saveConfig();
                         return true;
@@ -351,7 +369,6 @@ public class IceClientGuiScreen extends Screen {
             return true;
         }
 
-        // Search input handling
         if (keyCode == GLFW.GLFW_KEY_BACKSPACE) {
             if (!searchQuery.isEmpty()) {
                 searchQuery = searchQuery.substring(0, searchQuery.length() - 1);

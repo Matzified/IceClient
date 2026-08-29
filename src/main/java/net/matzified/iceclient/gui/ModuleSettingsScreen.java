@@ -253,14 +253,16 @@ public class ModuleSettingsScreen extends Screen {
                             int modeX = listX + listW - modeW - 14;
                             int modeY = sy + (cardH - modeH) / 2;
 
-                            if (mouseX >= modeX && mouseX <= modeX + 30) {
-                                ms.cyclePrev();
-                                ModuleManager.getInstance().saveConfig();
-                                return true;
-                            } else if (mouseX >= modeX + modeW - 30 && mouseX <= modeX + modeW) {
-                                ms.cycleNext();
-                                ModuleManager.getInstance().saveConfig();
-                                return true;
+                            if (mouseY >= modeY && mouseY <= modeY + modeH) {
+                                if (mouseX >= modeX && mouseX <= modeX + 30) {
+                                    ms.cyclePrev();
+                                    ModuleManager.getInstance().saveConfig();
+                                    return true;
+                                } else if (mouseX >= modeX + modeW - 30 && mouseX <= modeX + modeW) {
+                                    ms.cycleNext();
+                                    ModuleManager.getInstance().saveConfig();
+                                    return true;
+                                }
                             }
                         } else if (s instanceof NumberSetting) {
                             NumberSetting ns = (NumberSetting) s;
@@ -269,14 +271,16 @@ public class ModuleSettingsScreen extends Screen {
                             int numX = listX + listW - numW - 14;
                             int numY = sy + (cardH - numH) / 2;
 
-                            if (mouseX >= numX && mouseX <= numX + 30) {
-                                ns.decrement();
-                                ModuleManager.getInstance().saveConfig();
-                                return true;
-                            } else if (mouseX >= numX + numW - 30 && mouseX <= numX + numW) {
-                                ns.increment();
-                                ModuleManager.getInstance().saveConfig();
-                                return true;
+                            if (mouseY >= numY && mouseY <= numY + numH) {
+                                if (mouseX >= numX && mouseX <= numX + 30) {
+                                    ns.decrement();
+                                    ModuleManager.getInstance().saveConfig();
+                                    return true;
+                                } else if (mouseX >= numX + numW - 30 && mouseX <= numX + numW) {
+                                    ns.increment();
+                                    ModuleManager.getInstance().saveConfig();
+                                    return true;
+                                }
                             }
                         }
                     }

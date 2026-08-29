@@ -1,7 +1,5 @@
 package net.matzified.iceclient.optimizer;
 
-import net.minecraft.client.MinecraftClient;
-
 /**
  * 🧊 Ice Client In-Engine Base Game Optimization Core.
  * Provides low-level mathematical acceleration, memory leak prevention,
